@@ -43,3 +43,30 @@ export async function loadPartners() {
   ]);
   return { vendors: unwrap<Vendor[]>(vendors), designers: unwrap<Designer[]>(designers) };
 }
+
+/** Tasks assigned to a vendor or designer, with everything the task panel needs. */
+export async function loadAssignmentContext(column: "vendor_id" | "designer_id", id: string) {
+  const supabase = await createClient();
+  const assigned = unwrap<Task[]>(await supabase.from("tasks").select("*").eq(column, id).order("start_date"));
+  const projectIds = [...new Set(assigned.map((t) => t.project_id))];
+  const [projects, projectTasks, partners, stages] = await Promise.all([
+    projectIds.length ? supabase.from("projects").select("*").in("id", projectIds) : Promise.resolve({ data: [], error: null }),
+    projectIds.length ? supabase.from("tasks").select("*").in("project_id", projectIds) : Promise.resolve({ data: [], error: null }),
+    loadPartners(),
+    loadStages(),
+  ]);
+  const projectRows = unwrap<Project[]>(projects);
+  const clientIds = [...new Set(projectRows.map((p) => p.client_id))];
+  const clients = clientIds.length ? unwrap<Client[]>(await supabase.from("clients").select("*").in("id", clientIds)) : [];
+  return {
+    assigned,
+    context: {
+      projects: projectRows,
+      clients,
+      tasks: unwrap<Task[]>(projectTasks),
+      vendors: partners.vendors,
+      designers: partners.designers,
+      stages,
+    },
+  };
+}
