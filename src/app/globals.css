@@ -1,26 +1,37 @@
 @import "tailwindcss";
 
+@theme {
+  --color-canvas: #faf8f5;
+  --color-surface: #ffffff;
+  --color-ink: #1c1917;
+  --color-muted: #78716c;
+  --color-line: #e7e5e4;
+  --color-accent: #7a2048;
+  --color-accent-strong: #5f1737;
+  --color-accent-soft: #f6e8ee;
+  --color-risk: #b91c1c;
+  --color-risk-soft: #fef2f2;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+/* Native date inputs: keep them at a comfortable touch height */
+input[type="date"] {
+  min-height: 2.75rem;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
 }
