@@ -11,12 +11,12 @@ import { useConfirm } from "@/components/ui/confirm";
 import { useToast } from "@/components/ui/toast";
 import { TaskDetailPanel } from "@/components/tasks/task-detail-panel";
 import { useTaskActions } from "@/components/tasks/use-task-actions";
-import { applyDateShifts, deleteRow, updateRow } from "@/lib/mutations";
-import { diffDays, durationDays, formatLong, formatRange, todayISO } from "@/lib/dates";
+import { applyDateShifts, deleteRow, insertRow, updateRow } from "@/lib/mutations";
+import { addDays, diffDays, durationDays, formatLong, formatRange, todayISO } from "@/lib/dates";
 import { assessProjectRisk, describeRisk, scheduleBackward } from "@/lib/scheduling";
 import { nextTaskStatus, PROJECT_STATUSES, PROJECT_STATUS_LABEL, STATUS_COLOR, TASK_STATUS_LABEL } from "@/lib/labels";
 import { errorMessage, text } from "@/lib/form";
-import type { Project, Task, TaskContext } from "@/lib/types";
+import type { Project, Stage, Task, TaskContext } from "@/lib/types";
 import { ProjectBadges } from "./project-badges";
 
 export function ProjectDetail({ project, context }: { project: Project; context: TaskContext }) {
@@ -25,6 +25,7 @@ export function ProjectDetail({ project, context }: { project: Project; context:
   const toast = useToast();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
+  const [addingStage, setAddingStage] = useState(false);
   const { setStatus } = useTaskActions(context.tasks);
   const client = context.clients[0];
   const tasks = [...context.tasks].sort((a, b) => a.sort_order - b.sort_order);
@@ -85,7 +86,7 @@ export function ProjectDetail({ project, context }: { project: Project; context:
 
       <Card>
         <ol>
-          {tasks.map((task) => {
+          {tasks.map((task, index) => {
             const vendor = context.vendors.find((v) => v.id === task.vendor_id);
             const designer = context.designers.find((d) => d.id === task.designer_id);
             const overdue = task.status !== "done" && diffDays(task.end_date, today) < 0;
@@ -103,7 +104,7 @@ export function ProjectDetail({ project, context }: { project: Project; context:
                 <button type="button" onClick={() => setSelectedTaskId(task.id)} className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-3 pr-4 text-left hover:bg-stone-50">
                   <span className="min-w-0 flex-1">
                     <span className={`block truncate text-sm font-medium ${task.status === "done" ? "text-muted line-through" : ""}`}>
-                      {task.sort_order}. {task.stage_name}
+                      {index + 1}. {task.stage_name}
                     </span>
                     <span className="block truncate text-xs text-muted">
                       {[vendor?.name, designer?.name].filter(Boolean).join(", ") || "Unassigned"}
@@ -119,8 +120,12 @@ export function ProjectDetail({ project, context }: { project: Project; context:
             );
           })}
         </ol>
+        {tasks.length === 0 ? <p className="px-4 py-6 text-center text-sm text-muted">This project has no stages yet.</p> : null}
       </Card>
-      <p className="mt-2 text-xs text-muted">Tap the circle to change a stage’s status. Tap a stage to edit dates, assign a vendor or designer, or add notes.</p>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted">Tap the circle to change a stage’s status. Tap a stage to edit dates, assign a vendor or designer, add notes, or remove it.</p>
+        <Button onClick={() => setAddingStage(true)}>+ Add stage</Button>
+      </div>
 
       {project.notes ? (
         <section className="mt-6">
@@ -134,6 +139,9 @@ export function ProjectDetail({ project, context }: { project: Project; context:
       </Button>
 
       <TaskDetailPanel task={tasks.find((t) => t.id === selectedTaskId) ?? null} context={context} onClose={() => setSelectedTaskId(null)} />
+      <Sheet open={addingStage} onClose={() => setAddingStage(false)} title="Add stage">
+        {addingStage ? <AddStageForm projectId={project.id} tasks={tasks} stages={context.stages} onClose={() => setAddingStage(false)} /> : null}
+      </Sheet>
       <Sheet open={editing} onClose={() => setEditing(false)} title="Edit project">
         {editing ? <EditProjectForm project={project} tasks={tasks} onClose={() => setEditing(false)} /> : null}
       </Sheet>
@@ -240,4 +248,81 @@ function EditProjectForm({ project, tasks, onClose }: { project: Project; tasks:
       </Button>
     </form>
   );
+}
+
+function AddStageForm({ projectId, tasks, stages, onClose }: { projectId: string; tasks: Task[]; stages: Stage[]; onClose: () => void }) {
+  const router = useRouter();
+  const toast = useToast();
+  const available = stages.filter((s) => !tasks.some((t) => t.stage_name === s.name));
+  const [stageId, setStageId] = useState(available[0]?.id ?? "");
+  const stage = available.find((s) => s.id === stageId);
+  const [start, setStart] = useState(() => suggestedStart(available[0], tasks));
+  const [days, setDays] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  const n = Number.parseInt(days, 10);
+  const validDays = Number.isInteger(n) && n >= 1 && n <= 365;
+  const end = start && validDays ? addDays(start, n - 1) : null;
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!stage || !end) return;
+    setPending(true);
+    setError(null);
+    try {
+      await insertRow("tasks", { project_id: projectId, stage_name: stage.name, sort_order: stage.sort_order, start_date: start, end_date: end });
+      toast(`${stage.name} added`);
+      router.refresh();
+      onClose();
+    } catch (err) {
+      setError(errorMessage(err));
+      setPending(false);
+    }
+  }
+
+  if (available.length === 0) {
+    return <p className="text-sm text-muted">Every stage from Settings is already in this project. Add new stage types in Settings.</p>;
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <Field label="Stage">
+        <Select
+          value={stageId}
+          onChange={(e) => {
+            setStageId(e.target.value);
+            setStart(suggestedStart(available.find((s) => s.id === e.target.value), tasks));
+          }}
+        >
+          {available.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Start">
+          <Input type="date" value={start} onChange={(e) => setStart(e.target.value)} required />
+        </Field>
+        <Field label="Days">
+          <Input type="number" inputMode="numeric" min={1} max={365} value={days} onChange={(e) => setDays(e.target.value)} required />
+        </Field>
+      </div>
+      {end ? <p className="text-sm text-muted">Runs {formatRange(start, end)}</p> : null}
+      <FormError message={error} />
+      <Button type="submit" variant="primary" className="w-full" disabled={pending || !end}>
+        {pending ? "Adding…" : "Add stage"}
+      </Button>
+    </form>
+  );
+}
+
+/** Day after the stage that comes before this one in the Settings order, or today. */
+function suggestedStart(stage: Stage | undefined, tasks: Task[]) {
+  const before = tasks.filter((t) => stage && t.sort_order < stage.sort_order);
+  if (before.length === 0) return todayISO();
+  const lastEnd = before.reduce((latest, t) => (diffDays(t.end_date, latest) > 0 ? t.end_date : latest), before[0].end_date);
+  return addDays(lastEnd, 1);
 }

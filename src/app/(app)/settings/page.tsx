@@ -18,7 +18,7 @@ export default async function SettingsPage() {
       <section className="mb-10">
         <h2 className="text-lg font-semibold">Stages</h2>
         <p className="mb-4 text-sm text-muted">
-          New projects get these stages in this order, scheduled backward from the delivery date. Changes don’t affect existing projects.
+          These are the stages you can pick from when creating a project, in this order. You enter the days per stage for each project; the default days here are only shown as a reference when editing a task. Changes don’t affect existing projects.
         </p>
         <StagesEditor key={stages.map((s) => `${s.id}:${s.updated_at}`).join("|")} stages={stages} />
       </section>

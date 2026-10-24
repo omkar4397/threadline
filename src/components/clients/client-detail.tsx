@@ -83,7 +83,7 @@ export function ClientDetail({ client, colorIndex, projects, tasks, stages }: { 
           <h2 className="mb-2 text-sm font-semibold text-muted">Projects</h2>
           {projects.length === 0 ? (
             <EmptyState title="No projects yet">
-              <p>Create a project with a delivery date and its 8 stages are scheduled automatically.</p>
+              <p>Create a project, pick the stages it needs and how many days each takes. They’re scheduled back from the delivery date.</p>
               {!client.archived_at ? (
                 <button type="button" onClick={() => setCreating(true)} className={buttonClass("primary", "mt-4")}>
                   + New project

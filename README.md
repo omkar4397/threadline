@@ -3,16 +3,18 @@
 A responsive planning app for a solo fashion consultant: clients, projects, an 8-stage production timeline, vendors and designers.
 
 - **Timeline**: Gantt chart (or list view on small screens), coloured by client or by status, with today marker, delivery milestones, at-risk flags, an overlap strip, week/month/quarter zoom, and drag-to-reschedule on laptop.
-- **Clients & projects**: creating a project with a delivery date schedules all stages backward from that date.
+- **Clients & projects**: create a project, choose its stages and the days each needs; they're scheduled backward from the delivery date.
 - **Vendors & designers**: searchable directory; each detail page lists their current assignments across clients.
-- **Settings**: edit stage names, order and default lead times; change password; sign out.
+- **Settings**: edit the stage list (names, order, reference days); change password; sign out.
 
 Stack: Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Supabase (Postgres + Auth + RLS) · Vercel.
 
 ## Scheduling rules
 
-- Stages run back to back. The last stage ends on the delivery date; each earlier stage ends the day before the next starts. Durations are inclusive calendar days.
-- A task's lead time is its assigned vendor's or designer's typical lead time (the longer of the two if both are set), otherwise the stage default.
+- When creating a project you pick which stages it needs and enter the days for each. Nothing is filled in from defaults.
+- The chosen stages run back to back in their Settings order. The last one ends on the delivery date; each earlier stage ends the day before the next starts. Durations are inclusive calendar days.
+- Stages can be added to or removed from a project later.
+- When a vendor or designer with a typical lead time is assigned, the task panel offers to use it (the longer of the two if both are set).
 - Changing a task's end date offers to move later unfinished tasks in that project by the same number of days.
 - A project is **at risk** when a task is past its end date and not done, when its schedule ends after the delivery date, or when the remaining work no longer fits before delivery.
 

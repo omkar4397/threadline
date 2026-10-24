@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useConfirm } from "@/components/ui/confirm";
+import { useToast } from "@/components/ui/toast";
+import { deleteRow } from "@/lib/mutations";
+import { errorMessage } from "@/lib/form";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -22,6 +27,9 @@ export function TaskDetailPanel({ task, context, onClose }: { task: Task | null;
 
 function TaskEditor({ task, context, onClose }: { task: Task; context: TaskContext; onClose: () => void }) {
   const { saveTask, setStatus } = useTaskActions(context.tasks);
+  const router = useRouter();
+  const confirm = useConfirm();
+  const toast = useToast();
   const [status, setStatusValue] = useState(task.status);
   const [start, setStart] = useState(task.start_date);
   const [end, setEnd] = useState(task.end_date);
@@ -34,13 +42,14 @@ function TaskEditor({ task, context, onClose }: { task: Task; context: TaskConte
   const client = context.clients.find((c) => c.id === project?.client_id);
   const vendor = context.vendors.find((v) => v.id === vendorId);
   const designer = context.designers.find((d) => d.id === designerId);
-  const stageDefault = context.stages.find((s) => s.name === task.stage_name)?.default_lead_days;
   const today = todayISO();
 
   const datesValid = Boolean(start && end) && diffDays(end, start) >= 0;
   const duration = datesValid ? durationDays(start, end) : null;
-  const suggestedLead = leadDaysFor(stageDefault ?? duration ?? 1, vendor, designer);
-  const leadSource = vendor?.typical_lead_days ? vendor.name : designer?.typical_lead_days ? designer.name : stageDefault ? "Stage default" : null;
+  // Only an assigned vendor's or designer's lead time is offered; stage days
+  // are always set by hand.
+  const suggestedLead = leadDaysFor(duration ?? 1, vendor, designer);
+  const leadSource = [vendor, designer].filter((p) => p?.typical_lead_days).map((p) => p!.name).join(" / ") || null;
   const showLeadHint = datesValid && leadSource !== null && suggestedLead !== duration;
 
   const patch = useMemo(() => {
@@ -60,6 +69,23 @@ function TaskEditor({ task, context, onClose }: { task: Task; context: TaskConte
     const ok = await saveTask(task, patch);
     setSaving(false);
     if (ok) onClose();
+  }
+
+  async function removeStage() {
+    const ok = await confirm({
+      title: `Remove ${task.stage_name}?`,
+      message: `This removes the stage from ${project?.name ?? "the project"}, including its dates, assignments and notes.`,
+      choices: [{ value: "remove", label: "Remove stage", variant: "danger" }],
+    });
+    if (!ok) return;
+    try {
+      await deleteRow("tasks", task.id);
+      toast(`${task.stage_name} removed`);
+      router.refresh();
+      onClose();
+    } catch (err) {
+      toast(errorMessage(err), "error");
+    }
   }
 
   async function markDone() {
@@ -158,6 +184,10 @@ function TaskEditor({ task, context, onClose }: { task: Task; context: TaskConte
       <Field label="Notes">
         <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
       </Field>
+
+      <button type="button" onClick={removeStage} className="min-h-11 text-sm font-medium text-risk hover:underline">
+        Remove stage from project
+      </button>
 
       <div className="sticky bottom-0 -mx-4 flex gap-2 border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {task.status !== "done" ? (
