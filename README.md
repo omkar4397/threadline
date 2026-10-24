@@ -58,5 +58,3 @@ npm run dev
 ```
 
 Checks: `npm run lint && npm run typecheck && npm test && npm run build`.
-
-`npm run typecheck` needs Next's generated route types; run `npx next typegen` once first (or `npm run build`).
