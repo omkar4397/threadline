@@ -48,7 +48,7 @@ export function PartnersView({
           </Button>
         }
       />
-      <div role="tablist" className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-stone-100 p-1 sm:inline-grid">
+      <div role="tablist" className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-accent-soft/70 p-1 sm:inline-grid">
         {(["vendors", "designers"] as const).map((t) => (
           <button
             key={t}
@@ -56,7 +56,7 @@ export function PartnersView({
             type="button"
             aria-selected={tab === t}
             onClick={() => setTab(t)}
-            className={`min-h-11 rounded-lg px-6 text-sm font-medium ${tab === t ? "bg-surface shadow-sm" : "text-stone-500"}`}
+            className={`min-h-11 rounded-full px-6 text-sm font-medium ${tab === t ? "bg-surface shadow-soft" : "text-stone-500"}`}
           >
             {t === "vendors" ? `Vendors (${vendors.length})` : `Designers (${designers.length})`}
           </button>

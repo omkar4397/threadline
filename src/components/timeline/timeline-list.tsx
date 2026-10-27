@@ -68,7 +68,7 @@ export function TimelineList({
           <h2 className={`sticky top-0 z-10 -mx-4 bg-canvas/95 px-4 py-2 text-sm font-semibold backdrop-blur md:mx-0 md:px-0 ${key === "overdue" ? "text-risk" : ""}`}>
             {key === "overdue" ? "Past end date" : key === today ? `Today · ${formatLong(key)}` : formatLong(key)}
           </h2>
-          <ul className="overflow-hidden rounded-xl border border-line bg-surface">
+          <ul className="overflow-hidden rounded-3xl bg-surface shadow-soft">
             {buckets.get(key)!.map((item) =>
               item.kind === "task" ? (
                 <li key={item.task.id} className="border-b border-line last:border-0">

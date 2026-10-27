@@ -120,14 +120,14 @@ function TaskEditor({ task, context, onClose }: { task: Task; context: TaskConte
 
       <fieldset>
         <legend className="mb-1.5 text-sm font-medium">Status</legend>
-        <div className="grid grid-cols-3 gap-1 rounded-xl bg-stone-100 p-1">
+        <div className="grid grid-cols-3 gap-1 rounded-full bg-accent-soft/70 p-1">
           {TASK_STATUSES.map((s) => (
             <button
               key={s}
               type="button"
               onClick={() => setStatusValue(s)}
               aria-pressed={status === s}
-              className={`min-h-11 rounded-lg px-2 text-sm font-medium ${status === s ? "bg-surface shadow-sm" : "text-stone-500"}`}
+              className={`min-h-11 rounded-full px-2 text-sm font-medium ${status === s ? "bg-surface shadow-soft" : "text-stone-500"}`}
             >
               <span className="mr-1.5 inline-block size-2 rounded-full" style={{ background: STATUS_COLOR[s].bg }} />
               {TASK_STATUS_LABEL[s]}
@@ -147,13 +147,13 @@ function TaskEditor({ task, context, onClose }: { task: Task; context: TaskConte
       <div className="-mt-3 space-y-2 text-xs">
         {duration ? <p className="text-muted">{duration} day{duration === 1 ? "" : "s"}</p> : <p className="text-risk">End date must be on or after the start date.</p>}
         {status === "not_started" && start && diffDays(start, today) < 0 ? (
-          <p className="rounded-lg bg-amber-50 px-3 py-2 text-amber-800">The start date is already in the past.</p>
+          <p className="rounded-2xl bg-amber-50 px-3 py-2 text-amber-800">The start date is already in the past.</p>
         ) : null}
         {status !== "done" && end && diffDays(end, today) < 0 ? (
-          <p className="rounded-lg bg-risk-soft px-3 py-2 text-risk">This task is past its end date and isn’t done.</p>
+          <p className="rounded-2xl bg-risk-soft px-3 py-2 text-risk">This task is past its end date and isn’t done.</p>
         ) : null}
         {showLeadHint ? (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-accent-soft px-3 py-2 text-accent">
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-accent-soft px-3 py-2 text-accent">
             <span>
               {leadSource}: {suggestedLead} day{suggestedLead === 1 ? "" : "s"}
             </span>
@@ -191,7 +191,7 @@ function TaskEditor({ task, context, onClose }: { task: Task; context: TaskConte
       </Field>
 
       {linkedExpenses.length > 0 ? (
-        <p className="rounded-lg bg-stone-100 px-3 py-2 text-sm">
+        <p className="rounded-2xl bg-stone-100 px-3 py-2 text-sm">
           {formatMoney(totalOf(linkedExpenses))} spent on this stage ({linkedExpenses.length} expense{linkedExpenses.length === 1 ? "" : "s"}).
           {project ? (
             <>

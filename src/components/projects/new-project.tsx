@@ -94,9 +94,9 @@ function NewProjectForm({ clientId, stages }: { clientId: string; stages: Stage[
           ) : null}
         </div>
         {stages.length === 0 ? (
-          <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">You have no stages yet. Add them in Settings first.</p>
+          <p className="rounded-2xl bg-amber-50 px-3 py-2 text-sm text-amber-800">You have no stages yet. Add them in Settings first.</p>
         ) : (
-          <ul className="divide-y divide-line rounded-xl border border-line">
+          <ul className="divide-y divide-line rounded-3xl bg-surface shadow-soft">
             {stages.map((s) => {
               const on = Boolean(selected[s.id]);
               const planned = plan.find((t) => t.sort_order === s.sort_order && t.stage_name === s.name);
@@ -144,7 +144,7 @@ function NewProjectForm({ clientId, stages }: { clientId: string; stages: Stage[
           </p>
         ) : null}
         {late.length > 0 ? (
-          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <p className="mt-2 rounded-2xl bg-amber-50 px-3 py-2 text-sm text-amber-800">
             {late.length} stage{late.length === 1 ? " starts" : "s start"} in the past. Work would have needed to start on {formatLong(plan[0].start_date)}. You can still create the project and adjust dates afterwards.
           </p>
         ) : null}

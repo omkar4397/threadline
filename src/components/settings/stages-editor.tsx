@@ -125,7 +125,7 @@ export function StagesEditor({ stages }: { stages: Stage[] }) {
 
 function IconButton({ label, children, ...props }: { label: string; children: React.ReactNode; disabled?: boolean; onClick: () => void }) {
   return (
-    <button type="button" aria-label={label} title={label} className="flex size-11 items-center justify-center rounded-lg text-lg text-stone-500 hover:bg-stone-100 disabled:opacity-30" {...props}>
+    <button type="button" aria-label={label} title={label} className="flex size-11 items-center justify-center rounded-full text-lg text-stone-500 hover:bg-stone-100 disabled:opacity-30" {...props}>
       {children}
     </button>
   );

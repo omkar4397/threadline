@@ -14,7 +14,7 @@ export function RatingInput({ name, defaultValue }: { name: string; defaultValue
           onClick={() => setValue(value === n ? null : n)}
           aria-label={`${n} star${n === 1 ? "" : "s"}`}
           aria-pressed={value !== null && n <= value}
-          className={`flex size-11 items-center justify-center rounded-lg text-2xl ${value !== null && n <= value ? "text-amber-500" : "text-stone-300"} hover:bg-stone-100`}
+          className={`flex size-11 items-center justify-center rounded-full text-2xl ${value !== null && n <= value ? "text-amber-500" : "text-stone-300"} hover:bg-stone-100`}
         >
           ★
         </button>

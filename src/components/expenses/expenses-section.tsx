@@ -106,7 +106,7 @@ export function ExpensesSection({
 
           <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
             <Card className="px-4 py-3">
-              <div role="tablist" aria-label="Breakdown" className="mb-2 grid grid-cols-2 gap-1 rounded-lg bg-stone-100 p-1">
+              <div role="tablist" aria-label="Breakdown" className="mb-2 grid grid-cols-2 gap-1 rounded-full bg-accent-soft/70 p-1">
                 {(["category", "payee"] as const).map((b) => (
                   <button
                     key={b}
@@ -114,7 +114,7 @@ export function ExpensesSection({
                     type="button"
                     aria-selected={breakdown === b}
                     onClick={() => setBreakdown(b)}
-                    className={`min-h-9 rounded-md text-sm font-medium ${breakdown === b ? "bg-surface shadow-sm" : "text-stone-500"}`}
+                    className={`min-h-9 rounded-full text-sm font-semibold ${breakdown === b ? "bg-surface shadow-soft" : "text-stone-500"}`}
                   >
                     {b === "category" ? "By category" : "By paid to"}
                   </button>

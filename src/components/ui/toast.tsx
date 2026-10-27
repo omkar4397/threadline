@@ -17,11 +17,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext value={show}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 bottom-20 z-[70] flex flex-col items-center gap-2 px-4 md:bottom-6" aria-live="polite">
+      <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[70] flex flex-col items-center gap-2 px-4 md:bottom-6" aria-live="polite">
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto max-w-md rounded-xl px-4 py-3 text-sm shadow-lg ${t.tone === "error" ? "bg-risk text-white" : "bg-ink text-white"}`}
+            className={`pointer-events-auto max-w-md rounded-full px-5 py-3 text-sm font-medium shadow-lift ${t.tone === "error" ? "bg-risk text-white" : "bg-ink text-white"}`}
           >
             {t.message}
           </div>

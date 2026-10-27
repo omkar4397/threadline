@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/misc";
 import { buttonClass } from "@/components/ui/button";
 import { todayISO } from "@/lib/dates";
 import { assessProjectRisk } from "@/lib/scheduling";
-import { clientColor, STATUS_COLOR, TASK_STATUSES, TASK_STATUS_LABEL } from "@/lib/labels";
+import { clientColor, clientTextColor, STATUS_COLOR, TASK_STATUSES, TASK_STATUS_LABEL } from "@/lib/labels";
 import type { Task, TaskContext } from "@/lib/types";
 import { TimelineList } from "./timeline-list";
 
@@ -71,7 +71,7 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
   const today = todayISO();
 
   const activeClients = useMemo(() => clients.filter((c) => !c.archived_at), [clients]);
-  const colorByClient = useMemo(() => new Map(clients.map((c, i) => [c.id, clientColor(i)])), [clients]);
+  const indexByClient = useMemo(() => new Map(clients.map((c, i) => [c.id, i])), [clients]);
   const selectedClient = activeClients.find((c) => c.id === selectedClientId) ?? null;
   const colorMode: ColorMode = selectedClient ? "status" : "client";
 
@@ -80,7 +80,8 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
     return visibleClients
       .map((client) => ({
         client,
-        color: colorByClient.get(client.id)!,
+        color: clientColor(indexByClient.get(client.id)!),
+        textColor: clientTextColor(indexByClient.get(client.id)!),
         projects: projects
           .filter((p) => p.client_id === client.id && (showCompleted || p.status !== "completed"))
           .map((project) => {
@@ -89,7 +90,7 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
           }),
       }))
       .filter((g) => g.projects.length > 0);
-  }, [selectedClient, activeClients, colorByClient, projects, tasks, showCompleted, today]);
+  }, [selectedClient, activeClients, indexByClient, projects, tasks, showCompleted, today]);
 
   const atRiskCount = groups.reduce((n, g) => n + g.projects.filter((p) => p.risk.atRisk).length, 0);
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
@@ -103,7 +104,7 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
   if (activeClients.length === 0) {
     return (
       <>
-        <h1 className="mb-5 text-2xl font-semibold tracking-tight">Timeline</h1>
+        <h1 className="mb-5 text-3xl font-bold tracking-tight">Timeline</h1>
         <EmptyState title="No clients yet">
           <p>Add a client and create a project. Its tasks will appear here.</p>
           <Link href="/clients" className={buttonClass("primary", "mt-4")}>
@@ -118,9 +119,9 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
     <>
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">Timeline</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Timeline</h1>
           {atRiskCount > 0 ? (
-            <span className="rounded-full bg-risk-soft px-2.5 py-1 text-xs font-semibold text-risk">
+            <span className="rounded-full bg-risk-soft px-3 py-1.5 text-xs font-semibold text-risk">
               {atRiskCount} at risk
             </span>
           ) : null}
@@ -159,7 +160,7 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
                 type="button"
                 aria-pressed={showLoad === "on"}
                 onClick={() => setShowLoad(showLoad === "on" ? "off" : "on")}
-                className={`min-h-11 rounded-lg border px-3 text-sm font-medium ${showLoad === "on" ? "border-accent bg-accent-soft text-accent" : "border-line bg-surface text-stone-600"}`}
+                className={`min-h-11 rounded-full px-4 text-sm font-semibold ${showLoad === "on" ? "bg-accent text-white shadow-soft" : "bg-surface text-stone-600 shadow-soft"}`}
               >
                 Overlap
               </button>
@@ -204,14 +205,14 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
 
 function Segmented<T extends string>({ label, value, onChange, options }: { label: string; value: T; onChange: (v: T) => void; options: { value: T; label: string }[] }) {
   return (
-    <div role="group" aria-label={label} className="inline-flex rounded-lg border border-line bg-surface p-0.5">
+    <div role="group" aria-label={label} className="inline-flex gap-0.5 rounded-full bg-accent-soft/70 p-1">
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
-          className={`min-h-10 rounded-md px-3 text-sm font-medium ${value === o.value ? "bg-ink text-white" : "text-stone-600 hover:bg-stone-100"}`}
+          className={`min-h-9 rounded-full px-3.5 text-sm ${value === o.value ? "bg-surface font-semibold text-ink shadow-soft" : "font-medium text-stone-500 hover:text-ink"}`}
         >
           {o.label}
         </button>
@@ -226,24 +227,24 @@ function Legend({ groups, colorMode }: { groups: GanttGroup[]; colorMode: ColorM
       {colorMode === "client"
         ? groups.map((g) => (
             <span key={g.client.id} className="inline-flex items-center gap-1.5">
-              <span className="size-3 rounded-sm" style={{ background: g.color }} />
+              <span className="size-3 rounded-full" style={{ background: g.color }} />
               {g.client.name}
             </span>
           ))
         : TASK_STATUSES.map((s) => (
             <span key={s} className="inline-flex items-center gap-1.5">
-              <span className="size-3 rounded-sm" style={{ background: STATUS_COLOR[s].bg }} />
+              <span className="size-3 rounded-full" style={{ background: STATUS_COLOR[s].bg }} />
               {TASK_STATUS_LABEL[s]}
             </span>
           ))}
       <span className="inline-flex items-center gap-1.5">
-        <span className="size-2.5 rotate-45 bg-ink" /> Delivery
+        <span className="size-2.5 rotate-45 rounded-[2px] bg-ink" /> Delivery
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span className="size-2.5 rotate-45 bg-risk" /> Delivery at risk
+        <span className="size-2.5 rotate-45 rounded-[2px] bg-risk" /> Delivery at risk
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span className="h-3 w-3 rounded-sm ring-2 ring-risk" /> Past end date
+        <span className="h-3 w-3 rounded-full ring-2 ring-risk" /> Past end date
       </span>
       <span className="inline-flex items-center gap-1.5">
         <span className="h-3 w-0.5 bg-accent" /> Today

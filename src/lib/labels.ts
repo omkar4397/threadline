@@ -28,21 +28,42 @@ export const VENDOR_TYPE_LABEL: Record<VendorType, string> = {
   other: "Other",
 };
 
-/** Bar colours by status (single-client view). */
+/**
+ * Bar colours by status (single-client view). Pastel fills with dark text; the
+ * three steps also differ in lightness so they stay apart without colour vision.
+ */
 export const STATUS_COLOR: Record<TaskStatus, { bg: string; text: string }> = {
-  not_started: { bg: "#d6d3d1", text: "#292524" },
-  in_progress: { bg: "#2563eb", text: "#ffffff" },
-  done: { bg: "#15803d", text: "#ffffff" },
+  not_started: { bg: "#e4d9d6", text: "#4a3d41" },
+  in_progress: { bg: "#a9c4ea", text: "#15304f" },
+  done: { bg: "#9fcb9c", text: "#173a1f" },
 };
 
-/** Bar colours by client (All clients view). All pass contrast with white text. */
-const CLIENT_PALETTE = [
-  "#7a2048", "#0e7490", "#6d28d9", "#047857", "#b45309", "#1d4ed8",
-  "#be123c", "#4d7c0f", "#0f766e", "#c2410c", "#7e22ce", "#475569",
+/** Pastel bar colours by client (All clients view), each with a dark text colour that passes contrast. */
+const CLIENT_PALETTE: { bg: string; text: string }[] = [
+  { bg: "#f1b9c6", text: "#5a1f2e" }, // blush
+  { bg: "#bfd8bc", text: "#1f3a25" }, // sage
+  { bg: "#e9d3a6", text: "#4f3b0e" }, // sand
+  { bg: "#cfc4ec", text: "#33264f" }, // lavender
+  { bg: "#b9d9ea", text: "#14394a" }, // sky
+  { bg: "#f5c7ad", text: "#5a2a12" }, // peach
+  { bg: "#b9e2d4", text: "#123d30" }, // mint
+  { bg: "#efe09a", text: "#4a3c05" }, // butter
+  { bg: "#e6c3e1", text: "#4a1e45" }, // lilac
+  { bg: "#c6d1ef", text: "#1e2a4f" }, // powder blue
+  { bg: "#f0cfb3", text: "#4f2e12" }, // apricot
+  { bg: "#dcd4cf", text: "#3a332e" }, // stone
 ];
 
-export function clientColor(index: number) {
+function paletteEntry(index: number) {
   return CLIENT_PALETTE[((index % CLIENT_PALETTE.length) + CLIENT_PALETTE.length) % CLIENT_PALETTE.length];
+}
+
+export function clientColor(index: number) {
+  return paletteEntry(index).bg;
+}
+
+export function clientTextColor(index: number) {
+  return paletteEntry(index).text;
 }
 
 export function nextTaskStatus(status: TaskStatus): TaskStatus {

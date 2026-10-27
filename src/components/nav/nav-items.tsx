@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export type NavItem = { href: string; label: string; icon: ReactNode; match: (path: string) => boolean };
 
-const iconProps = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, className: "size-6" } as const;
+const iconProps = { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, className: "size-5" } as const;
 
 export const NAV_ITEMS: NavItem[] = [
   {

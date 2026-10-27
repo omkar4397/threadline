@@ -64,7 +64,7 @@ export function BarList({
                 onClick={() => onSelect(active ? "" : item.key)}
                 aria-pressed={active}
                 title={`${title}${active ? " · tap to clear filter" : " · tap to filter"}`}
-                className={`block min-h-12 w-full rounded-lg px-2 py-2 text-left hover:bg-stone-50 ${active ? "bg-accent-soft hover:bg-accent-soft" : ""}`}
+                className={`block min-h-12 w-full rounded-2xl px-2 py-2 text-left hover:bg-stone-50 ${active ? "bg-accent-soft hover:bg-accent-soft" : ""}`}
               >
                 {content}
               </button>

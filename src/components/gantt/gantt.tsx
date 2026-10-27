@@ -11,10 +11,10 @@ export type Zoom = "week" | "month" | "quarter";
 export type ColorMode = "client" | "status";
 
 export type GanttProject = { project: Project; tasks: Task[]; risk: ProjectRisk };
-export type GanttGroup = { client: Client; color: string; projects: GanttProject[] };
+export type GanttGroup = { client: Client; color: string; textColor: string; projects: GanttProject[] };
 
 const PX_PER_DAY: Record<Zoom, number> = { week: 44, month: 16, quarter: 6 };
-const BAR_HEIGHT = 28;
+const BAR_HEIGHT = 26;
 const LANE_GAP = 6;
 const ROW_PADDING = 10;
 const WEEKDAY_LETTERS = ["M", "T", "W", "T", "F", "S", "S"];
@@ -119,17 +119,17 @@ export function Gantt({
     width,
     backgroundImage: [
       `repeating-linear-gradient(to right, var(--color-line) 0 1px, transparent 1px ${7 * px}px)`,
-      zoom === "quarter" ? null : `repeating-linear-gradient(to right, transparent 0 ${5 * px}px, rgb(0 0 0 / 0.025) ${5 * px}px ${7 * px}px)`,
+      zoom === "quarter" ? null : `repeating-linear-gradient(to right, transparent 0 ${5 * px}px, rgb(163 68 90 / 0.035) ${5 * px}px ${7 * px}px)`,
     ]
       .filter(Boolean)
       .join(", "),
   };
 
   const todayX = x(today);
-  const todayLine = <div className="pointer-events-none absolute inset-y-0 z-10 w-0.5 bg-accent/70" style={{ left: todayX + px / 2 - 1 }} aria-hidden />;
+  const todayLine = <div className="pointer-events-none absolute inset-y-0 z-10 w-0.5 rounded-full bg-accent/50" style={{ left: todayX + px / 2 - 1 }} aria-hidden />;
 
   return (
-    <div ref={scrollRef} className="scrollbar-thin relative max-h-[calc(100dvh-15rem)] overflow-auto rounded-xl border border-line bg-surface md:max-h-[calc(100dvh-13rem)]">
+    <div ref={scrollRef} className="scrollbar-thin relative max-h-[calc(100dvh-15rem)] overflow-auto rounded-3xl bg-surface shadow-soft md:max-h-[calc(100dvh-13rem)]">
       <div style={{ width: `calc(var(--label-w) + ${width}px)` }} className="[--label-w:8.5rem] md:[--label-w:14rem]">
         {/* Header ---------------------------------------------------------------- */}
         <div className="sticky top-0 z-30 border-b border-line bg-surface">
@@ -138,7 +138,7 @@ export function Gantt({
             <div className="relative" style={{ width }}>
               <MonthRow start={range.start} days={range.days} px={px} />
               <DayRow start={range.start} days={range.days} px={px} zoom={zoom} today={today} />
-              <div className="absolute z-10 -translate-x-1/2 rounded-b bg-accent px-1.5 text-[10px] font-semibold text-white" style={{ left: todayX + px / 2, top: 0 }}>
+              <div className="absolute z-10 -translate-x-1/2 rounded-full bg-accent px-2 text-[10px] font-semibold text-white" style={{ left: todayX + px / 2, top: 2 }}>
                 Today
               </div>
             </div>
@@ -192,7 +192,7 @@ export function Gantt({
                     {lanes.map(({ task, start, end, lane }) => {
                       const left = x(start);
                       const barWidth = Math.max(px * durationDays(start, end) - 2, 4);
-                      const colors = colorMode === "status" ? STATUS_COLOR[task.status] : { bg: group.color, text: "#fff" };
+                      const colors = colorMode === "status" ? STATUS_COLOR[task.status] : { bg: group.color, text: group.textColor };
                       const overdue = task.status !== "done" && diffDays(task.end_date, today) < 0;
                       const isDragging = drag?.task.id === task.id && drag.moved;
                       const label = `${task.stage_name} · ${formatRange(start, end)}`;
@@ -201,7 +201,7 @@ export function Gantt({
                           key={task.id}
                           type="button"
                           title={`${label}\n${TASK_STATUS_LABEL[task.status]}${overdue ? " · past end date" : ""}`}
-                          className={`group absolute flex items-center overflow-hidden rounded-md text-left text-xs font-medium shadow-sm transition-[filter] select-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink md:cursor-grab ${isDragging ? "z-20 cursor-grabbing opacity-90 shadow-lg" : ""} ${overdue ? "ring-2 ring-risk ring-offset-1" : ""}`}
+                          className={`group absolute flex items-center overflow-hidden rounded-full text-left text-xs font-semibold transition-[filter] select-none hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink md:cursor-grab ${isDragging ? "z-20 cursor-grabbing opacity-90 shadow-lg" : ""} ${overdue ? "ring-2 ring-risk ring-offset-1" : ""}`}
                           style={{
                             left: left + 1,
                             width: barWidth,
@@ -209,7 +209,7 @@ export function Gantt({
                             height: BAR_HEIGHT,
                             background: colors.bg,
                             color: colors.text,
-                            opacity: colorMode === "client" && task.status === "done" ? 0.45 : 1,
+                            opacity: colorMode === "client" && task.status === "done" ? 0.55 : 1,
                           }}
                           onPointerDown={(e) => {
                             if (e.pointerType !== "mouse" || e.button !== 0) return;
@@ -225,7 +225,7 @@ export function Gantt({
                           }}
                         >
                           <span className="absolute inset-y-0 left-0 hidden w-2 cursor-ew-resize md:block" aria-hidden />
-                          <span className="truncate px-2">
+                          <span className="truncate px-2.5">
                             {colorMode === "client" && task.status === "done" ? "✓ " : ""}
                             {colorMode === "client" && task.status === "in_progress" ? "● " : ""}
                             {barWidth > 36 ? label : ""}
@@ -239,7 +239,7 @@ export function Gantt({
                       style={{ left: deliveryX, top: ROW_PADDING - 6 }}
                       title={`Delivery ${formatLong(project.delivery_date)}${risk.atRisk ? " · at risk" : ""}`}
                     >
-                      <span className={`block size-3.5 rotate-45 border-2 border-white shadow ${risk.atRisk ? "bg-risk" : "bg-ink"}`} />
+                      <span className={`block size-3.5 rotate-45 rounded-[3px] border-2 border-white shadow-soft ${risk.atRisk ? "bg-risk" : "bg-ink"}`} />
                     </div>
                     <div
                       className={`pointer-events-none absolute inset-y-0 w-px ${risk.atRisk ? "bg-risk/60" : "bg-ink/30"}`}
@@ -338,7 +338,7 @@ function LoadRow({ start, days, px, load }: { start: string; days: number; px: n
     cells.push(
       <div
         key={iso}
-        className="absolute inset-y-1 flex items-center justify-center rounded-sm text-[10px] font-semibold"
+        className="absolute inset-y-1 flex items-center justify-center rounded-md text-[10px] font-semibold"
         style={{
           left: i * px,
           width: px,

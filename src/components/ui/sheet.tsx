@@ -40,23 +40,23 @@ export function Sheet({
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 hidden bg-stone-900/30 md:block" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 hidden bg-stone-900/20 md:block" onClick={onClose} aria-hidden />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="absolute inset-0 flex flex-col bg-surface outline-none md:inset-y-0 md:left-auto md:right-0 md:w-[28rem] md:border-l md:border-line md:shadow-2xl"
+        className="absolute inset-0 flex flex-col bg-surface outline-none md:inset-y-3 md:left-auto md:right-3 md:w-[28rem] md:rounded-3xl md:shadow-lift"
       >
         <header className="flex items-center justify-between gap-3 border-b border-line px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-          <h2 id={titleId} className="truncate text-lg font-semibold">
+          <h2 id={titleId} className="truncate text-xl font-bold">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="-mr-2 inline-flex size-11 items-center justify-center rounded-lg text-muted hover:bg-stone-100"
+            className="-mr-2 inline-flex size-11 items-center justify-center rounded-full text-muted hover:bg-stone-100"
             aria-label="Close"
           >
             <svg viewBox="0 0 20 20" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8">

@@ -115,7 +115,7 @@ export function ProjectDetail({ project, context, categories }: { project: Proje
         }
         actions={
           <>
-            <Link href={`/?client=${client.id}`} className="inline-flex min-h-11 items-center rounded-lg border border-line bg-surface px-4 text-sm font-medium hover:bg-stone-50">
+            <Link href={`/?client=${client.id}`} className="inline-flex min-h-11 items-center rounded-full bg-surface px-5 text-sm font-semibold shadow-soft hover:bg-stone-50">
               View timeline
             </Link>
             <Button onClick={() => setEditing(true)}>Edit project</Button>
@@ -124,7 +124,7 @@ export function ProjectDetail({ project, context, categories }: { project: Proje
       />
 
       {risk.atRisk ? (
-        <div className="mb-4 rounded-xl border border-red-200 bg-risk-soft px-4 py-3 text-sm text-risk">
+        <div className="mb-4 rounded-3xl bg-risk-soft px-4 py-3 text-sm text-risk">
           <p className="font-semibold">⚠ This project is at risk</p>
           <ul className="mt-1 list-disc pl-5">
             {risk.reasons.map((r) => (
@@ -192,7 +192,7 @@ export function ProjectDetail({ project, context, categories }: { project: Proje
         {tasks.length === 0 ? <p className="px-4 py-6 text-center text-sm text-muted">This project has no stages yet.</p> : null}
       </Card>
       {selecting ? (
-        <div className="sticky bottom-20 z-30 mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-2 shadow-lg md:bottom-4">
+        <div className="sticky bottom-20 z-30 mt-2 flex flex-wrap items-center justify-between gap-2 rounded-3xl bg-surface shadow-soft p-2 shadow-lg md:bottom-4">
           <span className="px-2 text-sm">{picked.size} selected</span>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={stopSelecting}>
@@ -247,15 +247,15 @@ export function ProjectDetail({ project, context, categories }: { project: Proje
 function StatusIcon({ status }: { status: Task["status"] }) {
   if (status === "done") {
     return (
-      <span className="flex size-7 items-center justify-center rounded-full text-white" style={{ background: STATUS_COLOR.done.bg }}>
+      <span className="flex size-7 items-center justify-center rounded-full font-bold" style={{ background: STATUS_COLOR.done.bg, color: STATUS_COLOR.done.text }}>
         ✓
       </span>
     );
   }
   if (status === "in_progress") {
     return (
-      <span className="flex size-7 items-center justify-center rounded-full border-2" style={{ borderColor: STATUS_COLOR.in_progress.bg }}>
-        <span className="size-3 rounded-full" style={{ background: STATUS_COLOR.in_progress.bg }} />
+      <span className="flex size-7 items-center justify-center rounded-full border-2" style={{ borderColor: "#7fa3d9" }}>
+        <span className="size-3 rounded-full" style={{ background: "#7fa3d9" }} />
       </span>
     );
   }

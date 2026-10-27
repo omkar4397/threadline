@@ -91,7 +91,7 @@ export function ExpenseCategoriesEditor({ categories, usage }: { categories: Exp
                     disabled={pending}
                     aria-label={`Delete ${c.name}`}
                     title="Delete category"
-                    className="flex size-11 shrink-0 items-center justify-center rounded-lg text-lg text-stone-500 hover:bg-stone-100 disabled:opacity-30"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full text-lg text-stone-500 hover:bg-stone-100 disabled:opacity-30"
                   >
                     ×
                   </button>

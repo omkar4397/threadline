@@ -61,7 +61,7 @@ export function LoginForm({ mode }: { mode: "login" | "setup" }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-sm">
+    <form onSubmit={onSubmit} className="space-y-4 rounded-3xl bg-surface p-6 shadow-lift">
       <Field label="Username">
         <Input name="username" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} required />
       </Field>

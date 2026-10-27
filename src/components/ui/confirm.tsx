@@ -33,9 +33,9 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
     <ConfirmContext value={confirm}>
       {children}
       {request ? (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-stone-900/40 p-4 sm:items-center" role="alertdialog" aria-modal="true">
-          <div className="w-full max-w-md rounded-2xl bg-surface p-5 shadow-2xl">
-            <h2 className="text-lg font-semibold">{request.title}</h2>
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-stone-900/25 p-4 sm:items-center" role="alertdialog" aria-modal="true">
+          <div className="w-full max-w-md rounded-3xl bg-surface p-6 shadow-lift">
+            <h2 className="text-xl font-bold">{request.title}</h2>
             <div className="mt-2 text-sm text-stone-600">{request.message}</div>
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button variant="ghost" onClick={() => close(null)}>

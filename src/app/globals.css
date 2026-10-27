@@ -1,17 +1,34 @@
 @import "tailwindcss";
 
 @theme {
-  --color-canvas: #faf8f5;
+  /* Soft pastel boutique */
+  --color-canvas: #fbf4f1;
   --color-surface: #ffffff;
-  --color-ink: #1c1917;
-  --color-muted: #78716c;
-  --color-line: #e7e5e4;
-  --color-accent: #7a2048;
-  --color-accent-strong: #5f1737;
-  --color-accent-soft: #f6e8ee;
-  --color-risk: #b91c1c;
-  --color-risk-soft: #fef2f2;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #2e2427;
+  --color-muted: #76666b;
+  --color-line: #f0e3e6;
+  --color-accent: #a3445a;
+  --color-accent-strong: #82334a;
+  --color-accent-soft: #fbe5ea;
+  --color-risk: #a3263f;
+  --color-risk-soft: #fde8ec;
+
+  /* Warm, blush-tinted neutrals in place of Tailwind's stone scale */
+  --color-stone-50: #fcf7f6;
+  --color-stone-100: #f6ecee;
+  --color-stone-200: #efe1e4;
+  --color-stone-300: #e3d0d5;
+  --color-stone-400: #b9a5ab;
+  --color-stone-500: #8a787d;
+  --color-stone-600: #6a5a5f;
+  --color-stone-700: #4a3d41;
+  --color-stone-800: #3a2f32;
+  --color-stone-900: #2e2427;
+
+  --shadow-soft: 0 2px 12px rgb(122 64 80 / 0.07);
+  --shadow-lift: 0 6px 24px rgb(122 64 80 / 0.14);
+
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {

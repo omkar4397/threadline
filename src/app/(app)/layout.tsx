@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       <ConfirmProvider>
         <div className="flex min-h-dvh">
           <Sidebar username={username} />
-          <main className="min-w-0 flex-1 px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-28 md:px-8 md:pt-8 md:pb-10">{children}</main>
+          <main className="min-w-0 flex-1 px-4 pt-[max(1.25rem,env(safe-area-inset-top))] pb-32 md:px-8 md:pt-8 md:pb-10">{children}</main>
         </div>
         <BottomNav />
       </ConfirmProvider>
