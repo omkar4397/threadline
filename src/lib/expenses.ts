@@ -49,3 +49,89 @@ export function findCategoryByName<T extends { name: string }>(categories: T[], 
   const wanted = name.trim().toLowerCase();
   return categories.find((c) => c.name.trim().toLowerCase() === wanted);
 }
+
+type ExpenseLike = {
+  amount: number;
+  spent_on: string;
+  category_id: string | null;
+  vendor_id: string | null;
+  designer_id: string | null;
+  project_id: string;
+};
+
+/** "v:<id>", "d:<id>" or "none": one key for who was paid. */
+export function payeeKey(e: { vendor_id: string | null; designer_id: string | null }) {
+  return e.vendor_id ? `v:${e.vendor_id}` : e.designer_id ? `d:${e.designer_id}` : "none";
+}
+
+/** Category key as used by totalsByCategory: the id, or "none" when missing or deleted. */
+export function categoryKey(e: { category_id: string | null }, categories: { id: string }[]) {
+  return e.category_id && categories.some((c) => c.id === e.category_id) ? e.category_id : "none";
+}
+
+export type ExpenseFilter = {
+  /** Inclusive ISO dates; empty means unbounded. */
+  from?: string;
+  to?: string;
+  category?: string;
+  payee?: string;
+  projectIds?: string[];
+};
+
+export function filterExpenses<T extends ExpenseLike>(expenses: T[], filter: ExpenseFilter, categories: { id: string }[]): T[] {
+  return expenses.filter(
+    (e) =>
+      (!filter.from || e.spent_on >= filter.from) &&
+      (!filter.to || e.spent_on <= filter.to) &&
+      (!filter.category || categoryKey(e, categories) === filter.category) &&
+      (!filter.payee || payeeKey(e) === filter.payee) &&
+      (!filter.projectIds || filter.projectIds.includes(e.project_id)),
+  );
+}
+
+export type GroupTotal = { key: string; total: number; count: number };
+
+/** Totals per key, largest first. */
+export function totalsBy<T extends { amount: number }>(expenses: T[], key: (e: T) => string): GroupTotal[] {
+  const groups = new Map<string, T[]>();
+  for (const e of expenses) {
+    const k = key(e);
+    groups.set(k, [...(groups.get(k) ?? []), e]);
+  }
+  return [...groups.entries()]
+    .map(([k, items]) => ({ key: k, total: totalOf(items), count: items.length }))
+    .sort((a, b) => b.total - a.total || a.key.localeCompare(b.key));
+}
+
+/** Month totals from the first to the last month (both "YYYY-MM"), including empty months. */
+export function monthlyTotals(expenses: { amount: number; spent_on: string }[], firstMonth: string, lastMonth: string) {
+  const byMonth = new Map(totalsBy(expenses, (e) => e.spent_on.slice(0, 7)).map((g) => [g.key, g]));
+  const months: { month: string; total: number; count: number }[] = [];
+  let [y, m] = firstMonth.split("-").map(Number);
+  const [ly, lm] = lastMonth.split("-").map(Number);
+  while (y < ly || (y === ly && m <= lm)) {
+    const key = `${y}-${String(m).padStart(2, "0")}`;
+    months.push({ month: key, total: byMonth.get(key)?.total ?? 0, count: byMonth.get(key)?.count ?? 0 });
+    m += 1;
+    if (m === 13) {
+      m = 1;
+      y += 1;
+    }
+  }
+  return months;
+}
+
+/** Spreadsheet-safe CSV: quotes every cell and neutralises formula prefixes. */
+export function toCsv(rows: (string | number)[][]) {
+  return rows
+    .map((row) =>
+      row
+        .map((cell) => {
+          let text = String(cell);
+          if (typeof cell === "string" && /^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+          return `"${text.replace(/"/g, '""')}"`;
+        })
+        .join(","),
+    )
+    .join("\r\n");
+}
