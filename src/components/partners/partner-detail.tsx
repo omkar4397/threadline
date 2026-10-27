@@ -9,18 +9,18 @@ import { useConfirm } from "@/components/ui/confirm";
 import { useToast } from "@/components/ui/toast";
 import { TaskDetailPanel } from "@/components/tasks/task-detail-panel";
 import { deleteRow } from "@/lib/mutations";
-import { diffDays, formatRange, todayISO } from "@/lib/dates";
+import { diffDays, formatLong, formatRange, todayISO } from "@/lib/dates";
 import { STATUS_COLOR, TASK_STATUS_LABEL, VENDOR_TYPE_LABEL } from "@/lib/labels";
 import { errorMessage } from "@/lib/form";
-import type { Designer, Task, TaskContext, Vendor } from "@/lib/types";
+import { formatMoney, totalOf } from "@/lib/expenses";
+import type { Designer, Expense, ExpenseCategory, Task, TaskContext, Vendor } from "@/lib/types";
 import { DesignerFormSheet, VendorFormSheet } from "./partner-forms";
 
-type Props =
-  | { kind: "vendor"; partner: Vendor; assigned: Task[]; context: TaskContext }
-  | { kind: "designer"; partner: Designer; assigned: Task[]; context: TaskContext };
+type Shared = { assigned: Task[]; payments: Expense[]; categories: ExpenseCategory[]; context: TaskContext };
+type Props = ({ kind: "vendor"; partner: Vendor } & Shared) | ({ kind: "designer"; partner: Designer } & Shared);
 
 export function PartnerDetail(props: Props) {
-  const { kind, partner, assigned, context } = props;
+  const { kind, partner, assigned, payments, categories, context } = props;
   const router = useRouter();
   const confirm = useConfirm();
   const toast = useToast();
@@ -111,6 +111,39 @@ export function PartnerDetail(props: Props) {
               ) : null}
             </div>
           ) : null}
+
+          <h2 className="mt-6 mb-2 text-sm font-semibold text-muted">
+            Payments{payments.length ? ` · ${formatMoney(totalOf(payments))} in total` : ""}
+          </h2>
+          {payments.length === 0 ? (
+            <EmptyState title="No payments recorded">Add an expense on a project and choose {partner.name} under “Paid to”.</EmptyState>
+          ) : (
+            <Card>
+              <ul>
+                {payments.map((e) => {
+                  const project = context.projects.find((p) => p.id === e.project_id);
+                  const client = context.clients.find((c) => c.id === project?.client_id);
+                  const category = categories.find((c) => c.id === e.category_id)?.name ?? "Uncategorised";
+                  return (
+                    <li key={e.id} className="border-b border-line last:border-0">
+                      <Link href={`/projects/${e.project_id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 hover:bg-stone-50">
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium">
+                            {category}
+                            {e.description ? <span className="font-normal text-muted"> · {e.description}</span> : null}
+                          </span>
+                          <span className="block truncate text-xs text-muted">
+                            {formatLong(e.spent_on)} · {project?.name} · {client?.name}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-sm font-semibold tabular-nums">{formatMoney(Number(e.amount))}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Card>
+          )}
         </section>
 
         <aside>

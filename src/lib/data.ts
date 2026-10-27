@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import type { Client, Designer, Project, Stage, Task, Vendor } from "@/lib/types";
+import type { Client, Designer, Expense, ExpenseCategory, Project, Stage, Task, Vendor } from "@/lib/types";
 
 // Every query below runs as the signed-in user, so RLS limits results to
 // their own rows.
@@ -35,6 +35,11 @@ export async function loadStages() {
   return unwrap<Stage[]>(await supabase.from("stage_templates").select("*").order("sort_order"));
 }
 
+export async function loadExpenseCategories() {
+  const supabase = await createClient();
+  return unwrap<ExpenseCategory[]>(await supabase.from("expense_categories").select("*").order("is_default", { ascending: false }).order("name"));
+}
+
 export async function loadPartners() {
   const supabase = await createClient();
   const [vendors, designers] = await Promise.all([
@@ -47,8 +52,14 @@ export async function loadPartners() {
 /** Tasks assigned to a vendor or designer, with everything the task panel needs. */
 export async function loadAssignmentContext(column: "vendor_id" | "designer_id", id: string) {
   const supabase = await createClient();
-  const assigned = unwrap<Task[]>(await supabase.from("tasks").select("*").eq(column, id).order("start_date"));
-  const projectIds = [...new Set(assigned.map((t) => t.project_id))];
+  const [assignedResult, paymentsResult, categories] = await Promise.all([
+    supabase.from("tasks").select("*").eq(column, id).order("start_date"),
+    supabase.from("expenses").select("*").eq(column, id).order("spent_on", { ascending: false }),
+    loadExpenseCategories(),
+  ]);
+  const assigned = unwrap<Task[]>(assignedResult);
+  const payments = unwrap<Expense[]>(paymentsResult);
+  const projectIds = [...new Set([...assigned.map((t) => t.project_id), ...payments.map((e) => e.project_id)])];
   const [projects, projectTasks, partners, stages] = await Promise.all([
     projectIds.length ? supabase.from("projects").select("*").in("id", projectIds) : Promise.resolve({ data: [], error: null }),
     projectIds.length ? supabase.from("tasks").select("*").in("project_id", projectIds) : Promise.resolve({ data: [], error: null }),
@@ -60,6 +71,8 @@ export async function loadAssignmentContext(column: "vendor_id" | "designer_id",
   const clients = clientIds.length ? unwrap<Client[]>(await supabase.from("clients").select("*").in("id", clientIds)) : [];
   return {
     assigned,
+    payments,
+    categories,
     context: {
       projects: projectRows,
       clients,

@@ -92,6 +92,20 @@ export type Database = {
         },
         "name"
       >;
+      expense_categories: Table<Meta & { name: string; is_default: boolean }, "name">;
+      expenses: Table<
+        Meta & {
+          project_id: string;
+          task_id: string | null;
+          category_id: string | null;
+          vendor_id: string | null;
+          designer_id: string | null;
+          amount: number;
+          spent_on: string;
+          description: string | null;
+        },
+        "project_id" | "amount"
+      >;
     };
     Views: { [_ in never]: never };
     Functions: {

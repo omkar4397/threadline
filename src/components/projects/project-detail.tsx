@@ -16,27 +16,77 @@ import { addDays, diffDays, durationDays, formatLong, formatRange, todayISO } fr
 import { assessProjectRisk, describeRisk, scheduleBackward } from "@/lib/scheduling";
 import { nextTaskStatus, PROJECT_STATUSES, PROJECT_STATUS_LABEL, STATUS_COLOR, TASK_STATUS_LABEL } from "@/lib/labels";
 import { errorMessage, text } from "@/lib/form";
-import type { Project, Stage, Task, TaskContext } from "@/lib/types";
+import { ExpensesSection } from "@/components/expenses/expenses-section";
+import { formatMoney, totalOf } from "@/lib/expenses";
+import { createClient } from "@/lib/supabase/client";
+import type { ExpenseCategory, Project, Stage, Task, TaskContext } from "@/lib/types";
 import { ProjectBadges } from "./project-badges";
 
-export function ProjectDetail({ project, context }: { project: Project; context: TaskContext }) {
+export function ProjectDetail({ project, context, categories }: { project: Project; context: TaskContext; categories: ExpenseCategory[] }) {
   const router = useRouter();
   const confirm = useConfirm();
   const toast = useToast();
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [addingStage, setAddingStage] = useState(false);
+  const [selecting, setSelecting] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
   const { setStatus } = useTaskActions(context.tasks);
   const client = context.clients[0];
   const tasks = [...context.tasks].sort((a, b) => a.sort_order - b.sort_order);
   const today = todayISO();
   const risk = assessProjectRisk(project, tasks, today);
   const done = tasks.filter((t) => t.status === "done").length;
+  const expenses = context.expenses ?? [];
+
+  function togglePicked(id: string) {
+    setPicked((cur) => {
+      const next = new Set(cur);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function stopSelecting() {
+    setSelecting(false);
+    setPicked(new Set());
+  }
+
+  async function deletePicked() {
+    const ids = [...picked];
+    if (ids.length === 0) return;
+    const linked = expenses.filter((e) => e.task_id && picked.has(e.task_id)).length;
+    const ok = await confirm({
+      title: `Delete ${ids.length} stage${ids.length === 1 ? "" : "s"}?`,
+      message: (
+        <>
+          {tasks
+            .filter((t) => picked.has(t.id))
+            .map((t) => t.stage_name)
+            .join(", ")}{" "}
+          will be removed from this project, with their dates, assignments and notes.
+          {linked > 0 ? ` ${linked} linked expense${linked === 1 ? " stays" : "s stay"} on the project, no longer linked to a stage.` : ""}
+        </>
+      ),
+      choices: [{ value: "delete", label: `Delete ${ids.length} stage${ids.length === 1 ? "" : "s"}`, variant: "danger" }],
+    });
+    if (!ok) return;
+    try {
+      const { error } = await createClient().from("tasks").delete().in("id", ids);
+      if (error) throw error;
+      toast(`${ids.length} stage${ids.length === 1 ? "" : "s"} deleted`);
+      stopSelecting();
+      router.refresh();
+    } catch (err) {
+      toast(errorMessage(err), "error");
+    }
+  }
 
   async function remove() {
     const ok = await confirm({
       title: `Delete ${project.name}?`,
-      message: "This permanently deletes the project and all its tasks.",
+      message: `This permanently deletes the project with all its stages${expenses.length ? ` and ${expenses.length} expense${expenses.length === 1 ? "" : "s"}` : ""}.`,
       choices: [{ value: "delete", label: "Delete project", variant: "danger" }],
     });
     if (!ok) return;
@@ -90,24 +140,43 @@ export function ProjectDetail({ project, context }: { project: Project; context:
             const vendor = context.vendors.find((v) => v.id === task.vendor_id);
             const designer = context.designers.find((d) => d.id === task.designer_id);
             const overdue = task.status !== "done" && diffDays(task.end_date, today) < 0;
+            const stageSpend = totalOf(expenses.filter((e) => e.task_id === task.id));
+            const isPicked = picked.has(task.id);
             return (
-              <li key={task.id} className="flex items-stretch border-b border-line last:border-0">
+              <li key={task.id} className={`flex items-stretch border-b border-line last:border-0 ${isPicked ? "bg-risk-soft" : ""}`}>
+                {selecting ? (
+                  <label className="flex w-14 shrink-0 cursor-pointer items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={isPicked}
+                      onChange={() => togglePicked(task.id)}
+                      aria-label={`Select ${task.stage_name}`}
+                      className="size-5 accent-(--color-risk)"
+                    />
+                  </label>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setStatus(task, nextTaskStatus(task.status))}
+                    className="flex w-14 shrink-0 items-center justify-center hover:bg-stone-50"
+                    aria-label={`${TASK_STATUS_LABEL[task.status]}. Change status of ${task.stage_name}`}
+                    title={`${TASK_STATUS_LABEL[task.status]} — tap to change`}
+                  >
+                    <StatusIcon status={task.status} />
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => setStatus(task, nextTaskStatus(task.status))}
-                  className="flex w-14 shrink-0 items-center justify-center hover:bg-stone-50"
-                  aria-label={`${TASK_STATUS_LABEL[task.status]}. Change status of ${task.stage_name}`}
-                  title={`${TASK_STATUS_LABEL[task.status]} — tap to change`}
+                  onClick={() => (selecting ? togglePicked(task.id) : setSelectedTaskId(task.id))}
+                  className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-3 pr-4 text-left hover:bg-stone-50"
                 >
-                  <StatusIcon status={task.status} />
-                </button>
-                <button type="button" onClick={() => setSelectedTaskId(task.id)} className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-3 pr-4 text-left hover:bg-stone-50">
                   <span className="min-w-0 flex-1">
                     <span className={`block truncate text-sm font-medium ${task.status === "done" ? "text-muted line-through" : ""}`}>
                       {index + 1}. {task.stage_name}
                     </span>
                     <span className="block truncate text-xs text-muted">
                       {[vendor?.name, designer?.name].filter(Boolean).join(", ") || "Unassigned"}
+                      {stageSpend > 0 ? ` · ${formatMoney(stageSpend)} spent` : ""}
                       {task.notes ? ` · ${task.notes}` : ""}
                     </span>
                   </span>
@@ -122,10 +191,36 @@ export function ProjectDetail({ project, context }: { project: Project; context:
         </ol>
         {tasks.length === 0 ? <p className="px-4 py-6 text-center text-sm text-muted">This project has no stages yet.</p> : null}
       </Card>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-muted">Tap the circle to change a stage’s status. Tap a stage to edit dates, assign a vendor or designer, add notes, or remove it.</p>
-        <Button onClick={() => setAddingStage(true)}>+ Add stage</Button>
-      </div>
+      {selecting ? (
+        <div className="sticky bottom-20 z-30 mt-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface p-2 shadow-lg md:bottom-4">
+          <span className="px-2 text-sm">{picked.size} selected</span>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={stopSelecting}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={deletePicked} disabled={picked.size === 0}>
+              Delete {picked.size > 0 ? picked.size : ""} stage{picked.size === 1 ? "" : "s"}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted">Tap the circle to change a stage’s status. Tap a stage to edit dates, assign a vendor or designer, or add notes.</p>
+          <div className="flex gap-2">
+            {tasks.length > 0 ? <Button onClick={() => setSelecting(true)}>Delete stages…</Button> : null}
+            <Button onClick={() => setAddingStage(true)}>+ Add stage</Button>
+          </div>
+        </div>
+      )}
+
+      <ExpensesSection
+        projectId={project.id}
+        expenses={expenses}
+        categories={categories}
+        tasks={tasks}
+        vendors={context.vendors}
+        designers={context.designers}
+      />
 
       {project.notes ? (
         <section className="mt-6">

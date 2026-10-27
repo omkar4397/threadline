@@ -7,6 +7,7 @@ import { useConfirm } from "@/components/ui/confirm";
 import { useToast } from "@/components/ui/toast";
 import { deleteRow } from "@/lib/mutations";
 import { errorMessage } from "@/lib/form";
+import { formatMoney, totalOf } from "@/lib/expenses";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
@@ -71,10 +72,14 @@ function TaskEditor({ task, context, onClose }: { task: Task; context: TaskConte
     if (ok) onClose();
   }
 
+  const linkedExpenses = (context.expenses ?? []).filter((e) => e.task_id === task.id);
+
   async function removeStage() {
     const ok = await confirm({
       title: `Remove ${task.stage_name}?`,
-      message: `This removes the stage from ${project?.name ?? "the project"}, including its dates, assignments and notes.`,
+      message: `This removes the stage from ${project?.name ?? "the project"}, including its dates, assignments and notes.${
+        linkedExpenses.length ? ` Its ${linkedExpenses.length} expense${linkedExpenses.length === 1 ? " stays" : "s stay"} on the project, no longer linked to a stage.` : ""
+      }`,
       choices: [{ value: "remove", label: "Remove stage", variant: "danger" }],
     });
     if (!ok) return;
@@ -184,6 +189,20 @@ function TaskEditor({ task, context, onClose }: { task: Task; context: TaskConte
       <Field label="Notes">
         <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
       </Field>
+
+      {linkedExpenses.length > 0 ? (
+        <p className="rounded-lg bg-stone-100 px-3 py-2 text-sm">
+          {formatMoney(totalOf(linkedExpenses))} spent on this stage ({linkedExpenses.length} expense{linkedExpenses.length === 1 ? "" : "s"}).
+          {project ? (
+            <>
+              {" "}
+              <Link href={`/projects/${project.id}`} className="font-medium text-accent hover:underline">
+                See expenses
+              </Link>
+            </>
+          ) : null}
+        </p>
+      ) : null}
 
       <button type="button" onClick={removeStage} className="min-h-11 text-sm font-medium text-risk hover:underline">
         Remove stage from project
