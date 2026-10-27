@@ -5,6 +5,7 @@ A responsive planning app for a solo fashion consultant: clients, projects, an 8
 - **Timeline**: Gantt chart (or list view on small screens), coloured by client or by status, with today marker, delivery milestones, at-risk flags, an overlap strip, week/month/quarter zoom, and drag-to-reschedule on laptop.
 - **Clients & projects**: create a project, choose its stages and the days each needs; they're scheduled backward from the delivery date.
 - **Expenses**: record what each project costs, with a category (five built in, plus any you type), an optional stage and an optional vendor or designer as payee. Projects show totals by category; stages show what was spent on them; vendor and designer pages list payments across all projects.
+- **Expenses overview**: spending across all projects, filtered by period, client, project, category and vendor/designer, with headline totals, spend per month, breakdowns by category, payee, project and client (tap a bar to filter), and a CSV download. Each project's expenses can be filtered by category and payee too.
 - **Vendors & designers**: searchable directory; each detail page lists their current assignments and payments across clients.
 - **Settings**: edit the stage list (names, order, reference days) and expense categories; change password; sign out.
 

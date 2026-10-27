@@ -27,6 +27,17 @@ export const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    href: "/expenses",
+    label: "Expenses",
+    match: (p) => p.startsWith("/expenses"),
+    icon: (
+      <svg {...iconProps}>
+        <rect x="3.5" y="6" width="17" height="12.5" rx="2" />
+        <path d="M3.5 10h17M7 14.5h3" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     href: "/partners",
     label: "Partners",
     match: (p) => p.startsWith("/partners"),
