@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "./nav-items";
+import { Logo } from "@/components/brand/logo";
 
 export function Sidebar({ username }: { username: string }) {
   const pathname = usePathname();
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col px-4 py-6 md:flex">
-      <Link href="/" className="mb-8 flex items-center gap-2 px-3">
-        <span className="flex size-9 items-center justify-center rounded-full bg-accent text-sm font-bold text-white shadow-soft">T</span>
-        <span className="text-xl font-bold tracking-tight">Threadline</span>
+      <Link href="/" className="mb-8 flex items-center px-3" aria-label="Threadline home">
+        <Logo size={40} textClassName="text-2xl" />
       </Link>
       <nav className="flex flex-1 flex-col gap-1">
         {NAV_ITEMS.map((item) => {
