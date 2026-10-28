@@ -33,6 +33,26 @@ Each project gets a small **Quote** list. A line is: what it is, how many units,
 
 Open questions are tracked in the conversation; see "Questions" below.
 
+### Two rates per line: vendor rate and client rate
+
+How the consultant plans: ask the vendor for their rate (e.g. printing ₹500/m), then quote the client their own rate (₹600/m). So each quote line holds **both rates**:
+
+| | Per unit | Total (× qty) | Source |
+|---|---|---|---|
+| Vendor's rate | ₹500/m | ₹20,000 | typed while planning |
+| Client rate | ₹600/m | ₹24,000 | typed while planning |
+| Paid | (derived) | ₹22,500 | sum of linked expenses |
+
+- Planned margin = client total − vendor total (visible before any payment).
+- Actual margin = client total − paid.
+- Paid vs agreed shows if the vendor charged more or less than quoted.
+- Expenses *are* the actuals; they link to the quote line (no separate "actual" record).
+- A line can name its vendor/designer so "Record payment" pre-fills the payee.
+- "Fully paid" can be suggested automatically when paid ≥ agreed vendor total; until then the summary uses the planned margin for that line.
+- Lump-sum splits pre-fill from the vendor's agreed totals.
+- Project summary: quoted to client · agreed with vendors · paid so far · planned margin · actual margin · consulting fee · total earnings.
+- Client-facing views show client rates only.
+
 ### Instalments and lump-sum payments
 
 One concept covers every case: a **payment (expense) can be linked to one quote line, split across several, or not linked yet**. Each quote line's "paid to provider" is the sum of the amounts linked to it.
