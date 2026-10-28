@@ -14,7 +14,21 @@ Status: brainstorming, nothing built yet. Last updated 2026-10-28.
   - **Courier**: tracked too (unit to be decided).
 - Quoted vs actual should later connect to the expenses already recorded in the app.
 
-## Current direction (simplified)
+## Current direction: simplest version (2026-10-28)
+
+Feedback: the linking / instalments / splits workflow felt too complicated. In most cases the vendor's quoted price is exactly what gets paid. So:
+
+- One **Costing** table per project. A line = type (Fabric, Printing, Design, Courier, Other), name (free text for fabric, with suggestions from earlier names), quantity, **vendor rate**, **client rate**, optional vendor/designer. Margin shows as soon as both rates are typed.
+- **"Mark paid"** (one tap) = paid exactly the vendor's quoted total. **"Paid a different amount"** for exceptions (and part payments, rarely needed).
+- Marking paid **creates the expense automatically** (project, category, payee, amount), so vendor pages and the Expenses overview stay in sync with no double entry. (To confirm with the consultant.)
+- Dropped: manual expense-to-line linking, lump-sum splitting, "fully paid" tick, separate planned/confirmed margins. One margin per line: vendor-rate based until paid, then actual paid.
+- Consulting fee: one line per project, added to total earnings.
+- Other spending not in the costing stays in Expenses as today.
+- Open: auto-create expense OK? Courier per shipment or flat? Consulting fee always fixed?
+
+The sections below are earlier iterations, kept for reference.
+
+## Earlier iteration (simplified)
 
 Each project gets a small **Quote** list. A line is: what it is, how many units, and the rate quoted to the client per unit.
 
