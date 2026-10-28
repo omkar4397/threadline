@@ -9,3 +9,4 @@ Planning app for a solo fashion consultant. Next.js App Router + TypeScript + Ta
 - Scheduling rules are pure functions in `src/lib/scheduling` with Vitest tests (`npm test`).
 - Login is username + password; usernames map to `<username>@threadline.local` internally (see `src/lib/auth.ts`).
 - Checks before pushing: `npm run lint && npm run typecheck && npm test && npm run build`.
+- Pricing / quotes / margins are being designed; read `docs/pricing-and-margins.md` before working on them.
