@@ -33,6 +33,17 @@ Each project gets a small **Quote** list. A line is: what it is, how many units,
 
 Open questions are tracked in the conversation; see "Questions" below.
 
+### Instalments and lump-sum payments
+
+One concept covers every case: a **payment (expense) can be linked to one quote line, split across several, or not linked yet**. Each quote line's "paid to provider" is the sum of the amounts linked to it.
+
+- **Instalments for one line** (advance + balance): each instalment is its own expense linked to the same line; the line lists them and shows "paid so far".
+- **Fully paid tick per line**: until ticked, the line shows "paid so far" in grey and claims no margin; once ticked, the margin is final. The project summary shows *confirmed margin* (fully paid lines) and *pending* separately, so partial payments never inflate the margin.
+- **One lump sum covering several lines** (e.g. one payment to a fabric supplier for silk and velvet): "Split across quote lines" when recording the payment, pre-filled in proportion to the quoted amounts, editable, and it must add up to the payment total ("left to allocate ₹0") before saving. The payment stays a single expense on vendor pages and in the Expenses overview; only quote lines see the split.
+- **Payments before the quote exists**: recorded as normal expenses, shown under "Not in quote yet", linked or split later.
+- Likely data model: `quote_lines` per project, existing `expenses` unchanged as payments, plus `expense_allocations (expense_id, quote_line_id, amount)`; a single-line link is one allocation of the full amount.
+- Open: confirmed vs pending margin OK? Pre-filled proportional split OK? Payments spanning two projects (suggested: record two separate payments).
+
 ## Earlier, fuller strategy (parked, for later phases)
 
 The first proposal, kept for reference:
