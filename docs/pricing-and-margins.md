@@ -1,6 +1,6 @@
 # Pricing, quotes and margins: brainstorm notes
 
-Status: brainstorming, nothing built yet. Last updated 2026-10-28.
+Status: the Pricing section below is built (2026-10-31). Payment tracking and client-facing quotes are not.
 
 ## Decisions so far (from the consultant)
 
@@ -14,7 +14,7 @@ Status: brainstorming, nothing built yet. Last updated 2026-10-28.
   - **Courier**: tracked too (unit to be decided).
 - Quoted vs actual should later connect to the expenses already recorded in the app.
 
-## Agreed design: Pricing section (2026-10-31, not built yet)
+## Agreed design: Pricing section (built 2026-10-31)
 
 A separate **Pricing** section on each project comparing the price quoted to the client with the price agreed with the vendor. Not linked to Expenses; no payment tracking; private to the consultant.
 

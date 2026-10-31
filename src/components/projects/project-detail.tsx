@@ -17,12 +17,32 @@ import { assessProjectRisk, describeRisk, scheduleBackward } from "@/lib/schedul
 import { nextTaskStatus, PROJECT_STATUSES, PROJECT_STATUS_LABEL, STATUS_COLOR, TASK_STATUS_LABEL } from "@/lib/labels";
 import { errorMessage, text } from "@/lib/form";
 import { ExpensesSection } from "@/components/expenses/expenses-section";
+import { PricingSection, type LatestRatesProp } from "@/components/pricing/pricing-section";
 import { formatMoney, totalOf } from "@/lib/expenses";
 import { createClient } from "@/lib/supabase/client";
-import type { ExpenseCategory, Project, Stage, Task, TaskContext } from "@/lib/types";
+import type { ExpenseCategory, PricingItemType, PricingLine, PricingProduct, Project, ProjectFxRate, Stage, Task, TaskContext } from "@/lib/types";
+
+export type PricingProps = {
+  lines: PricingLine[];
+  itemTypes: PricingItemType[];
+  products: PricingProduct[];
+  lockedRates: ProjectFxRate[];
+  latest: LatestRatesProp;
+  fabricNames: string[];
+};
 import { ProjectBadges } from "./project-badges";
 
-export function ProjectDetail({ project, context, categories }: { project: Project; context: TaskContext; categories: ExpenseCategory[] }) {
+export function ProjectDetail({
+  project,
+  context,
+  categories,
+  pricing,
+}: {
+  project: Project;
+  context: TaskContext;
+  categories: ExpenseCategory[];
+  pricing: PricingProps;
+}) {
   const router = useRouter();
   const confirm = useConfirm();
   const toast = useToast();
@@ -212,6 +232,8 @@ export function ProjectDetail({ project, context, categories }: { project: Proje
           </div>
         </div>
       )}
+
+      <PricingSection project={project} {...pricing} vendors={context.vendors} designers={context.designers} />
 
       <ExpensesSection
         projectId={project.id}
