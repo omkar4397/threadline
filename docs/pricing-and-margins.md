@@ -14,7 +14,37 @@ Status: brainstorming, nothing built yet. Last updated 2026-10-28.
   - **Courier**: tracked too (unit to be decided).
 - Quoted vs actual should later connect to the expenses already recorded in the app.
 
-## Current direction: simplest version (2026-10-28)
+## Agreed design: Pricing section (2026-10-31, not built yet)
+
+A separate **Pricing** section on each project comparing the price quoted to the client with the price agreed with the vendor. Not linked to Expenses; no payment tracking; private to the consultant.
+
+**Item types** (user list with defaults; new types can be added and managed in Settings):
+
+| Type | Default unit | Detail |
+|---|---|---|
+| Fabric cost | metre | fabric name, free text (suggests earlier names) |
+| Designing | design | – |
+| Sampling | product's unit | product dropdown |
+| Production | product's unit | product dropdown |
+| Courier | flat or per shipment | – |
+
+- **Products** (shared by Sampling and Production; user list, add/rename/remove): Fabric printing (metre), Cap (piece), Jacket (piece), Bag (piece), Tapestry (piece).
+- **Units editable on every line** (decided case by case): metre, piece, design, shipment, set, kg, flat.
+
+**Line:** item type · detail · quantity + unit · vendor price per unit (always INR) · client price per unit (any currency, per line; defaults to the last currency used on the project) · optional vendor/designer.
+
+**Currencies:**
+- Pinned first: INR, USD, SAR; then AED, EUR, GBP, SEK; then the rest.
+- Rates **locked per project per currency** when first used ("1 SAR = ₹22.40 · locked 31 Oct"); "Update to today's rate" button; manual rate override.
+- "At today's rates your margin would be …" comparison.
+- Source: ExchangeRate-API open access (free, daily, includes SAR/AED; requires a "Rates by ExchangeRate-API" credit), with a backup free daily source; fall back to the last saved rate. (Frankfurter/ECB was rejected: no SAR or AED.)
+- Every line shows both currencies; a two-way converter (any currency ↔ INR) at the top of the section.
+
+**Consulting fee:** an amount in the client's currency.
+
+**Summary:** quoted to client per currency + INR total · vendor total (INR) · margin on services (INR + %) · consulting fee · total earned (INR + %). Each line shows margin amount and %.
+
+## Earlier direction: simplest version (2026-10-28)
 
 Feedback: the linking / instalments / splits workflow felt too complicated. In most cases the vendor's quoted price is exactly what gets paid. So:
 
