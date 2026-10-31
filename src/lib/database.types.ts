@@ -6,6 +6,8 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 type ProjectStatus = "active" | "on_hold" | "completed";
 type TaskStatus = "not_started" | "in_progress" | "done";
 type VendorType = "fabric_supplier" | "printer" | "manufacturer" | "shipper" | "other";
+type PricingUnit = "metre" | "piece" | "design" | "shipment" | "set" | "kg" | "flat";
+type PricingDetail = "none" | "text" | "product";
 
 type Table<Row, Required extends keyof Row> = {
   Row: Row;
@@ -39,6 +41,8 @@ export type Database = {
           delivery_date: string;
           status: ProjectStatus;
           notes: string | null;
+          consulting_fee: number | null;
+          consulting_fee_currency: string;
         },
         "client_id" | "name" | "delivery_date"
       >;
@@ -92,6 +96,39 @@ export type Database = {
         },
         "name"
       >;
+      pricing_item_types: Table<
+        Meta & { name: string; default_unit: PricingUnit; detail: PricingDetail; sort_order: number },
+        "name"
+      >;
+      pricing_products: Table<Meta & { name: string; default_unit: PricingUnit }, "name">;
+      pricing_lines: Table<
+        Meta & {
+          project_id: string;
+          item_type_id: string;
+          product_id: string | null;
+          detail: string | null;
+          quantity: number;
+          unit: PricingUnit;
+          vendor_rate: number;
+          client_rate: number;
+          client_currency: string;
+          vendor_id: string | null;
+          designer_id: string | null;
+        },
+        "project_id" | "item_type_id" | "quantity" | "unit"
+      >;
+      project_fx_rates: {
+        Row: { user_id: string; project_id: string; currency: string; inr_per_unit: number; manual: boolean; locked_at: string };
+        Insert: { user_id?: string; project_id: string; currency: string; inr_per_unit: number; manual?: boolean; locked_at?: string };
+        Update: Partial<{ project_id: string; currency: string; inr_per_unit: number; manual: boolean; locked_at: string }>;
+        Relationships: [];
+      };
+      fx_latest: {
+        Row: { user_id: string; rates: Json; source: string; fetched_at: string };
+        Insert: { user_id?: string; rates: Json; source: string; fetched_at?: string };
+        Update: Partial<{ rates: Json; source: string; fetched_at: string }>;
+        Relationships: [];
+      };
       expense_categories: Table<Meta & { name: string; is_default: boolean }, "name">;
       expenses: Table<
         Meta & {
@@ -122,7 +159,13 @@ export type Database = {
       };
       owner_exists: { Args: never; Returns: boolean };
     };
-    Enums: { project_status: ProjectStatus; task_status: TaskStatus; vendor_type: VendorType };
+    Enums: {
+      project_status: ProjectStatus;
+      task_status: TaskStatus;
+      vendor_type: VendorType;
+      pricing_unit: PricingUnit;
+      pricing_detail: PricingDetail;
+    };
     CompositeTypes: { [_ in never]: never };
   };
 };

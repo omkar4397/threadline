@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import type { Client, Designer, Expense, ExpenseCategory, Project, Stage, Task, Vendor } from "@/lib/types";
+import type { Client, Designer, Expense, ExpenseCategory, PricingItemType, PricingProduct, Project, Stage, Task, Vendor } from "@/lib/types";
 
 // Every query below runs as the signed-in user, so RLS limits results to
 // their own rows.
@@ -82,4 +82,13 @@ export async function loadAssignmentContext(column: "vendor_id" | "designer_id",
       stages,
     },
   };
+}
+
+export async function loadPricingLists() {
+  const supabase = await createClient();
+  const [itemTypes, products] = await Promise.all([
+    supabase.from("pricing_item_types").select("*").order("sort_order").order("name"),
+    supabase.from("pricing_products").select("*").order("name"),
+  ]);
+  return { itemTypes: unwrap<PricingItemType[]>(itemTypes), products: unwrap<PricingProduct[]>(products) };
 }

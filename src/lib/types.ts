@@ -8,6 +8,10 @@ export type Vendor = Row<"vendors">;
 export type Designer = Row<"designers">;
 export type Expense = Row<"expenses">;
 export type ExpenseCategory = Row<"expense_categories">;
+export type PricingItemType = Row<"pricing_item_types">;
+export type PricingProduct = Row<"pricing_products">;
+export type PricingLine = Row<"pricing_lines">;
+export type ProjectFxRate = Row<"project_fx_rates">;
 
 /** Lookups the task editor needs, passed from server pages to client components. */
 export type TaskContext = {
