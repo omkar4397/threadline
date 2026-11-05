@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useConfirm } from "@/components/ui/confirm";
 import { useToast } from "@/components/ui/toast";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Field, FormError, Input, Select, Textarea } from "@/components/ui/field";
+import { Combobox } from "@/components/ui/combobox";
 import { deleteRow } from "@/lib/mutations";
 import { errorMessage } from "@/lib/form";
 import { formatMoney, totalOf } from "@/lib/expenses";
@@ -49,7 +50,6 @@ function TaskEditor({ task, draft, context, onClose }: { task: Task | null; draf
   const router = useRouter();
   const confirm = useConfirm();
   const toast = useToast();
-  const namesId = useId();
   const today = todayISO();
 
   const openProjects = context.projects.filter((p) => p.status !== "completed");
@@ -186,12 +186,7 @@ function TaskEditor({ task, draft, context, onClose }: { task: Task | null; draf
       </div>
 
       <Field label="Title" hint={isMilestone ? "A single-date event, e.g. client review meeting." : "Pick a common name or type your own."}>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} list={namesId} maxLength={120} required autoFocus={!task} placeholder={isMilestone ? "e.g. Client review meeting" : "e.g. Research, Sampling"} />
-        <datalist id={namesId}>
-          {context.taskNames.map((n) => (
-            <option key={n.id} value={n.name} />
-          ))}
-        </datalist>
+        <Combobox value={title} onChange={setTitle} options={context.taskNames.map((n) => n.name)} maxLength={120} required autoFocus={!task} placeholder={isMilestone ? "e.g. Client review meeting" : "e.g. Research, Sampling"} />
       </Field>
 
       {isMilestone ? (

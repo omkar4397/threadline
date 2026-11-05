@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Field, FormError, Input, Select } from "@/components/ui/field";
+import { Combobox } from "@/components/ui/combobox";
 import { useConfirm } from "@/components/ui/confirm";
 import { useToast } from "@/components/ui/toast";
 import { deleteRow, insertRow, updateRow } from "@/lib/mutations";
@@ -51,7 +52,6 @@ function LineForm({ onClose, projectId, line, defaultCurrency, itemTypes, produc
   const router = useRouter();
   const toast = useToast();
   const confirm = useConfirm();
-  const listId = useId();
 
   const [typeId, setTypeId] = useState(line?.item_type_id ?? itemTypes[0]?.id ?? NEW);
   const [newType, setNewType] = useState({ name: "", unit: "piece" as PricingUnit, detail: "none" as PricingDetail });
@@ -214,12 +214,7 @@ function LineForm({ onClose, projectId, line, defaultCurrency, itemTypes, produc
 
       {detailKind === "text" ? (
         <Field label={type?.name === "Fabric cost" ? "Fabric" : "Name"} hint="Free text. Names you’ve used before are suggested.">
-          <Input value={detail} onChange={(e) => setDetail(e.target.value)} list={listId} maxLength={120} placeholder="e.g. Silk georgette, Velvet" />
-          <datalist id={listId}>
-            {fabricNames.map((n) => (
-              <option key={n} value={n} />
-            ))}
-          </datalist>
+          <Combobox value={detail} onChange={setDetail} options={fabricNames} maxLength={120} placeholder="e.g. Silk georgette, Velvet" />
         </Field>
       ) : null}
 
