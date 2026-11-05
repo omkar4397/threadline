@@ -59,7 +59,7 @@ export function PartnerDetail(props: Props) {
         <button type="button" onClick={() => setSelectedTaskId(task.id)} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">
           <span className="size-2.5 shrink-0 rounded-full" style={{ background: STATUS_COLOR[task.status].bg }} title={TASK_STATUS_LABEL[task.status]} />
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-medium">{task.stage_name}</span>
+            <span className="block truncate text-sm font-medium">{task.title}</span>
             <span className="block truncate text-xs text-muted">
               {project?.name} · {client?.name}
             </span>

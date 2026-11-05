@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { loadExpenseCategories, loadPartners, loadPricingLists, loadStages } from "@/lib/data";
+import { loadExpenseCategories, loadPartners, loadPricingLists, loadTaskNames } from "@/lib/data";
 import { getLatestRates } from "@/lib/fx-server";
 import { ProjectDetail } from "@/components/projects/project-detail";
 
@@ -13,13 +13,13 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[id]"
   const { data: project } = await supabase.from("projects").select("*").eq("id", id).maybeSingle();
   if (!project) notFound();
 
-  const [{ data: client }, { data: tasks }, { data: expenses }, { vendors, designers }, stages, categories, pricingLists, { data: pricingLines }, { data: lockedRates }, { data: namedLines }, latest] =
+  const [{ data: client }, { data: tasks }, { data: expenses }, { vendors, designers }, taskNames, categories, pricingLists, { data: pricingLines }, { data: lockedRates }, { data: namedLines }, latest] =
     await Promise.all([
       supabase.from("clients").select("*").eq("id", project.client_id).single(),
-      supabase.from("tasks").select("*").eq("project_id", id).order("sort_order"),
+      supabase.from("tasks").select("*").eq("project_id", id).order("start_date").order("end_date"),
       supabase.from("expenses").select("*").eq("project_id", id).order("spent_on", { ascending: false }),
       loadPartners(),
-      loadStages(),
+      loadTaskNames(),
       loadExpenseCategories(),
       loadPricingLists(),
       supabase.from("pricing_lines").select("*").eq("project_id", id).order("created_at"),
@@ -34,7 +34,7 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[id]"
   return (
     <ProjectDetail
       project={project}
-      context={{ projects: [project], clients: [client], tasks: tasks ?? [], expenses: expenses ?? [], vendors, designers, stages }}
+      context={{ projects: [project], clients: [client], tasks: tasks ?? [], expenses: expenses ?? [], vendors, designers, taskNames }}
       categories={categories}
       pricing={{
         lines: pricingLines ?? [],

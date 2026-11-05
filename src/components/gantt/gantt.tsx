@@ -168,7 +168,7 @@ export function Gantt({
               </div>
             ) : null}
             {group.projects.map(({ project, tasks, risk }) => {
-              const lanes = assignLanes(tasks.map((t) => ({ task: t, ...datesFor(t) })));
+              const lanes = assignLanes(tasks.map((t) => ({ task: t, ...datesFor(t) })), px);
               const laneCount = Math.max(1, ...lanes.map((l) => l.lane + 1));
               const height = ROW_PADDING * 2 + laneCount * BAR_HEIGHT + (laneCount - 1) * LANE_GAP;
               const deliveryX = x(project.delivery_date) + px / 2;
@@ -195,7 +195,37 @@ export function Gantt({
                       const colors = colorMode === "status" ? STATUS_COLOR[task.status] : { bg: group.color, text: group.textColor };
                       const overdue = task.status !== "done" && diffDays(task.end_date, today) < 0;
                       const isDragging = drag?.task.id === task.id && drag.moved;
-                      const label = `${task.stage_name} · ${formatRange(start, end)}`;
+                      const label = `${task.title} · ${formatRange(start, end)}`;
+                      const top = ROW_PADDING + lane * (BAR_HEIGHT + LANE_GAP);
+                      if (task.kind === "milestone") {
+                        // A round marker on its date, with the title beside it.
+                        return (
+                          <button
+                            key={task.id}
+                            type="button"
+                            title={`${task.title} · ${formatLong(start)}\n${TASK_STATUS_LABEL[task.status]}${overdue ? " · date passed" : ""}`}
+                            className={`absolute flex items-center gap-1.5 rounded-full pr-2 text-left text-xs font-semibold whitespace-nowrap text-ink select-none hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-ink md:cursor-grab ${isDragging ? "z-20 cursor-grabbing" : ""}`}
+                            style={{ left: left + px / 2 - BAR_HEIGHT / 2, top, height: BAR_HEIGHT, opacity: task.status === "done" ? 0.55 : 1 }}
+                            onPointerDown={(e) => {
+                              if (e.pointerType !== "mouse" || e.button !== 0) return;
+                              setDrag({ task, mode: "move", originX: e.clientX, delta: 0, moved: false });
+                            }}
+                            onClick={() => {
+                              if (suppressClick.current) return;
+                              onSelectTask(task);
+                            }}
+                          >
+                            <span
+                              className={`flex shrink-0 items-center justify-center rounded-full border-2 border-white text-[10px] shadow-soft ${overdue ? "ring-2 ring-risk" : ""}`}
+                              style={{ width: BAR_HEIGHT, height: BAR_HEIGHT, background: colors.bg, color: colors.text }}
+                              aria-hidden
+                            >
+                              {task.status === "done" ? "✓" : ""}
+                            </span>
+                            {task.title}
+                          </button>
+                        );
+                      }
                       return (
                         <button
                           key={task.id}
@@ -205,7 +235,7 @@ export function Gantt({
                           style={{
                             left: left + 1,
                             width: barWidth,
-                            top: ROW_PADDING + lane * (BAR_HEIGHT + LANE_GAP),
+                            top,
                             height: BAR_HEIGHT,
                             background: colors.bg,
                             color: colors.text,
@@ -265,11 +295,18 @@ function draggedDates(d: DragState) {
   };
 }
 
-/** Stack overlapping bars into separate lanes within a project row. */
-function assignLanes<T extends { start: string; end: string; task: Task }>(items: T[]) {
-  const sorted = [...items].sort((a, b) => diffDays(a.start, b.start) || a.task.sort_order - b.task.sort_order);
+/**
+ * Stack overlapping bars into separate lanes within a project row. A milestone
+ * also reserves room for the title written beside its marker.
+ */
+function assignLanes<T extends { start: string; end: string; task: Task }>(items: T[], px: number) {
+  const sorted = [...items].sort((a, b) => diffDays(a.start, b.start) || diffDays(a.end, b.end) || a.task.title.localeCompare(b.task.title));
   const laneEnds: string[] = [];
-  return sorted.map((item) => {
+  return sorted.map((original) => {
+    const item =
+      original.task.kind === "milestone"
+        ? { ...original, end: addDays(original.start, Math.ceil((BAR_HEIGHT + 12 + original.task.title.length * 6.5) / px)) }
+        : original;
     let lane = laneEnds.findIndex((end) => diffDays(item.start, end) > 0);
     if (lane === -1) {
       lane = laneEnds.length;
@@ -277,7 +314,7 @@ function assignLanes<T extends { start: string; end: string; task: Task }>(items
     } else {
       laneEnds[lane] = item.end;
     }
-    return { ...item, lane };
+    return { ...original, lane };
   });
 }
 

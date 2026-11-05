@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { loadExpenseCategories, loadPricingLists, loadStages } from "@/lib/data";
+import { loadExpenseCategories, loadPricingLists, loadTaskNames } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/ui/misc";
-import { StagesEditor } from "@/components/settings/stages-editor";
+import { TaskNamesEditor } from "@/components/settings/task-names-editor";
 import { AccountSettings } from "@/components/settings/account-settings";
 import { ExpenseCategoriesEditor } from "@/components/settings/expense-categories-editor";
 import { PricingListsEditor } from "@/components/settings/pricing-lists-editor";
@@ -11,8 +11,8 @@ export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const [stages, categories, { data: expenseRows }, pricingLists, { data: pricingRows }, { data }] = await Promise.all([
-    loadStages(),
+  const [taskNames, categories, { data: expenseRows }, pricingLists, { data: pricingRows }, { data }] = await Promise.all([
+    loadTaskNames(),
     loadExpenseCategories(),
     supabase.from("expenses").select("category_id"),
     loadPricingLists(),
@@ -33,11 +33,9 @@ export default async function SettingsPage() {
     <div className="max-w-3xl">
       <PageHeader title="Settings" />
       <section className="mb-10">
-        <h2 className="text-lg font-semibold">Stages</h2>
-        <p className="mb-4 text-sm text-muted">
-          These are the stages you can pick from when creating a project, in this order. You enter the days per stage for each project; the default days here are only shown as a reference when editing a task. Changes don’t affect existing projects.
-        </p>
-        <StagesEditor key={stages.map((s) => `${s.id}:${s.updated_at}`).join("|")} stages={stages} />
+        <h2 className="text-lg font-semibold">Task names</h2>
+        <p className="mb-4 text-sm text-muted">Suggested when you add a task, so you don’t have to retype common ones. You can always type any other title.</p>
+        <TaskNamesEditor key={taskNames.map((s) => `${s.id}:${s.updated_at}`).join("|")} names={taskNames} />
       </section>
       <section className="mb-10">
         <h2 className="text-lg font-semibold">Expense categories</h2>

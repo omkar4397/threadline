@@ -10,7 +10,7 @@ const variants: Record<Variant, string> = {
 };
 
 export function buttonClass(variant: Variant = "secondary", extra = "") {
-  return `inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed ${variants[variant]} ${extra}`;
+  return `inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full whitespace-nowrap px-5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed ${variants[variant]} ${extra}`;
 }
 
 export function Button({

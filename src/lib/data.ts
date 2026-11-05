@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import type { Client, Designer, Expense, ExpenseCategory, PricingItemType, PricingProduct, Project, Stage, Task, Vendor } from "@/lib/types";
+import type { Client, Designer, Expense, ExpenseCategory, PricingItemType, PricingProduct, Project, Task, TaskName, Vendor } from "@/lib/types";
 
 // Every query below runs as the signed-in user, so RLS limits results to
 // their own rows.
@@ -12,13 +12,13 @@ function unwrap<T>(result: { data: T | null; error: { message: string } | null }
 
 export async function loadPlanningData() {
   const supabase = await createClient();
-  const [clients, projects, tasks, vendors, designers, stages] = await Promise.all([
+  const [clients, projects, tasks, vendors, designers, taskNames] = await Promise.all([
     supabase.from("clients").select("*").order("created_at"),
     supabase.from("projects").select("*").order("delivery_date"),
-    supabase.from("tasks").select("*").order("sort_order"),
+    supabase.from("tasks").select("*").order("start_date").order("end_date"),
     supabase.from("vendors").select("*").order("name"),
     supabase.from("designers").select("*").order("name"),
-    supabase.from("stage_templates").select("*").order("sort_order"),
+    supabase.from("task_names").select("*").order("sort_order").order("name"),
   ]);
   return {
     clients: unwrap<Client[]>(clients),
@@ -26,13 +26,13 @@ export async function loadPlanningData() {
     tasks: unwrap<Task[]>(tasks),
     vendors: unwrap<Vendor[]>(vendors),
     designers: unwrap<Designer[]>(designers),
-    stages: unwrap<Stage[]>(stages),
+    taskNames: unwrap<TaskName[]>(taskNames),
   };
 }
 
-export async function loadStages() {
+export async function loadTaskNames() {
   const supabase = await createClient();
-  return unwrap<Stage[]>(await supabase.from("stage_templates").select("*").order("sort_order"));
+  return unwrap<TaskName[]>(await supabase.from("task_names").select("*").order("sort_order").order("name"));
 }
 
 export async function loadExpenseCategories() {
@@ -60,11 +60,11 @@ export async function loadAssignmentContext(column: "vendor_id" | "designer_id",
   const assigned = unwrap<Task[]>(assignedResult);
   const payments = unwrap<Expense[]>(paymentsResult);
   const projectIds = [...new Set([...assigned.map((t) => t.project_id), ...payments.map((e) => e.project_id)])];
-  const [projects, projectTasks, partners, stages] = await Promise.all([
+  const [projects, projectTasks, partners, taskNames] = await Promise.all([
     projectIds.length ? supabase.from("projects").select("*").in("id", projectIds) : Promise.resolve({ data: [], error: null }),
     projectIds.length ? supabase.from("tasks").select("*").in("project_id", projectIds) : Promise.resolve({ data: [], error: null }),
     loadPartners(),
-    loadStages(),
+    loadTaskNames(),
   ]);
   const projectRows = unwrap<Project[]>(projects);
   const clientIds = [...new Set(projectRows.map((p) => p.client_id))];
@@ -79,7 +79,7 @@ export async function loadAssignmentContext(column: "vendor_id" | "designer_id",
       tasks: unwrap<Task[]>(projectTasks),
       vendors: partners.vendors,
       designers: partners.designers,
-      stages,
+      taskNames,
     },
   };
 }

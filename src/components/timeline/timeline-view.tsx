@@ -4,13 +4,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { Gantt, type ColorMode, type GanttGroup, type Zoom } from "@/components/gantt/gantt";
-import { TaskDetailPanel } from "@/components/tasks/task-detail-panel";
+import { TaskDetailPanel, type NewTaskDraft } from "@/components/tasks/task-detail-panel";
 import { useTaskActions } from "@/components/tasks/use-task-actions";
 import { Select } from "@/components/ui/field";
 import { EmptyState } from "@/components/ui/misc";
-import { buttonClass } from "@/components/ui/button";
+import { Button, buttonClass } from "@/components/ui/button";
 import { todayISO } from "@/lib/dates";
-import { assessProjectRisk } from "@/lib/scheduling";
+import { assessProjectRisk, assigneeKey, compareTasks } from "@/lib/scheduling";
 import { clientColor, clientTextColor, STATUS_COLOR, TASK_STATUSES, TASK_STATUS_LABEL } from "@/lib/labels";
 import type { Task, TaskContext } from "@/lib/types";
 import { TimelineList } from "./timeline-list";
@@ -67,7 +67,9 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
   const [showLoad, setShowLoad] = usePersistentState<"on" | "off">("threadline.load", "off", ["on", "off"]);
   const [showCompleted, setShowCompleted] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-  const { saveTask } = useTaskActions(tasks);
+  const [draft, setDraft] = useState<NewTaskDraft | null>(null);
+  const [assignee, setAssignee] = useState("");
+  const { saveTask } = useTaskActions();
   const today = todayISO();
 
   const activeClients = useMemo(() => clients.filter((c) => !c.archived_at), [clients]);
@@ -85,12 +87,19 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
         projects: projects
           .filter((p) => p.client_id === client.id && (showCompleted || p.status !== "completed"))
           .map((project) => {
-            const projectTasks = tasks.filter((t) => t.project_id === project.id).sort((a, b) => a.sort_order - b.sort_order);
-            return { project, tasks: projectTasks, risk: assessProjectRisk(project, projectTasks, today) };
-          }),
+            const projectTasks = tasks.filter((t) => t.project_id === project.id).sort(compareTasks);
+            // Risk always looks at the whole project; the filter only narrows what's drawn.
+            const shown = assignee ? projectTasks.filter((t) => assigneeKey(t) === assignee) : projectTasks;
+            return { project, tasks: shown, risk: assessProjectRisk(project, projectTasks, today) };
+          })
+          .filter((p) => !assignee || p.tasks.length > 0),
       }))
       .filter((g) => g.projects.length > 0);
-  }, [selectedClient, activeClients, indexByClient, projects, tasks, showCompleted, today]);
+  }, [selectedClient, activeClients, indexByClient, projects, tasks, showCompleted, today, assignee]);
+
+  // With one client selected and a single open project, new tasks go straight to it.
+  const clientOpenProjects = selectedClient ? projects.filter((p) => p.client_id === selectedClient.id && p.status !== "completed") : [];
+  const selectedProjectId = clientOpenProjects.length === 1 ? clientOpenProjects[0].id : undefined;
 
   const atRiskCount = groups.reduce((n, g) => n + g.projects.filter((p) => p.risk.atRisk).length, 0);
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
@@ -121,10 +130,16 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold tracking-tight">Timeline</h1>
           {atRiskCount > 0 ? (
-            <span className="rounded-full bg-risk-soft px-3 py-1.5 text-xs font-semibold text-risk">
+            <span className="shrink-0 rounded-full bg-risk-soft px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-risk">
               {atRiskCount} at risk
             </span>
           ) : null}
+          <div className="ml-auto flex gap-2 lg:ml-2">
+            <Button variant="primary" onClick={() => setDraft({ kind: "task", projectId: selectedProjectId })}>
+              + Task
+            </Button>
+            <Button onClick={() => setDraft({ kind: "milestone", projectId: selectedProjectId })}>+ Milestone</Button>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select aria-label="Client" value={selectedClient?.id ?? ""} onChange={(e) => selectClient(e.target.value)} className="w-full sm:w-56">
@@ -134,6 +149,29 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
                 {c.name}
               </option>
             ))}
+          </Select>
+          <Select aria-label="Assigned to" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="w-full sm:w-52">
+            <option value="">Anyone</option>
+            <option value="me">My tasks</option>
+            <option value="none">Unassigned</option>
+            {context.vendors.length ? (
+              <optgroup label="Vendors">
+                {context.vendors.map((v) => (
+                  <option key={v.id} value={`v:${v.id}`}>
+                    {v.name}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
+            {context.designers.length ? (
+              <optgroup label="Designers">
+                {context.designers.map((d) => (
+                  <option key={d.id} value={`d:${d.id}`}>
+                    {d.name}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
           </Select>
           <Segmented
             label="View"
@@ -198,7 +236,15 @@ export function TimelineView({ selectedClientId, ...context }: TaskContext & { s
         <TimelineList groups={groups} colorMode={colorMode} today={today} context={context} onSelectTask={(t) => setSelectedTaskId(t.id)} />
       )}
 
-      <TaskDetailPanel task={selectedTask} context={context} onClose={() => setSelectedTaskId(null)} />
+      <TaskDetailPanel
+        task={selectedTask}
+        draft={selectedTask ? null : draft}
+        context={context}
+        onClose={() => {
+          setSelectedTaskId(null);
+          setDraft(null);
+        }}
+      />
     </>
   );
 }

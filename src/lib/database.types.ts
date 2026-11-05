@@ -5,6 +5,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 type ProjectStatus = "active" | "on_hold" | "completed";
 type TaskStatus = "not_started" | "in_progress" | "done";
+type TaskKind = "task" | "milestone";
 type VendorType = "fabric_supplier" | "printer" | "manufacturer" | "shipper" | "other";
 type PricingUnit = "metre" | "piece" | "design" | "shipment" | "set" | "kg" | "flat";
 type PricingDetail = "none" | "text" | "product";
@@ -46,23 +47,21 @@ export type Database = {
         },
         "client_id" | "name" | "delivery_date"
       >;
-      stage_templates: Table<
-        Meta & { name: string; sort_order: number; default_lead_days: number },
-        "name" | "sort_order" | "default_lead_days"
-      >;
+      task_names: Table<Meta & { name: string; sort_order: number }, "name" | "sort_order">;
       tasks: Table<
         Meta & {
           project_id: string;
-          stage_name: string;
-          sort_order: number;
+          title: string;
+          kind: TaskKind;
           start_date: string;
           end_date: string;
           status: TaskStatus;
+          assigned_to_self: boolean;
           vendor_id: string | null;
           designer_id: string | null;
           notes: string | null;
         },
-        "project_id" | "stage_name" | "sort_order" | "start_date" | "end_date"
+        "project_id" | "title" | "start_date" | "end_date"
       >;
       vendors: Table<
         Meta & {
@@ -147,21 +146,12 @@ export type Database = {
     Views: { [_ in never]: never };
     Functions: {
       create_owner_account: { Args: { p_username: string; p_password: string }; Returns: undefined };
-      create_project_with_tasks: {
-        Args: {
-          p_client_id: string;
-          p_name: string;
-          p_delivery_date: string;
-          p_notes: string;
-          p_tasks: Json;
-        };
-        Returns: string;
-      };
       owner_exists: { Args: never; Returns: boolean };
     };
     Enums: {
       project_status: ProjectStatus;
       task_status: TaskStatus;
+      task_kind: TaskKind;
       vendor_type: VendorType;
       pricing_unit: PricingUnit;
       pricing_detail: PricingDetail;

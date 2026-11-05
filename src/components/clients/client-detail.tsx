@@ -14,10 +14,10 @@ import { formatLong, todayISO } from "@/lib/dates";
 import { assessProjectRisk } from "@/lib/scheduling";
 import { clientColor } from "@/lib/labels";
 import { errorMessage } from "@/lib/form";
-import type { Client, Project, Stage, Task } from "@/lib/types";
+import type { Client, Project, Task } from "@/lib/types";
 import { ClientFormSheet } from "./client-form";
 
-export function ClientDetail({ client, colorIndex, projects, tasks, stages }: { client: Client; colorIndex: number; projects: Project[]; tasks: Task[]; stages: Stage[] }) {
+export function ClientDetail({ client, colorIndex, projects, tasks }: { client: Client; colorIndex: number; projects: Project[]; tasks: Task[] }) {
   const router = useRouter();
   const confirm = useConfirm();
   const toast = useToast();
@@ -83,7 +83,7 @@ export function ClientDetail({ client, colorIndex, projects, tasks, stages }: { 
           <h2 className="mb-2 text-sm font-semibold text-muted">Projects</h2>
           {projects.length === 0 ? (
             <EmptyState title="No projects yet">
-              <p>Create a project, pick the stages it needs and how many days each takes. They’re scheduled back from the delivery date.</p>
+              <p>Create a project with a delivery date, then add tasks and milestones as you plan them.</p>
               {!client.archived_at ? (
                 <button type="button" onClick={() => setCreating(true)} className={buttonClass("primary", "mt-4")}>
                   + New project
@@ -103,7 +103,7 @@ export function ClientDetail({ client, colorIndex, projects, tasks, stages }: { 
                         <span className="min-w-0">
                           <span className="block truncate font-medium">{p.name}</span>
                           <span className="block text-xs text-muted">
-                            Delivery {formatLong(p.delivery_date)} · {done}/{projectTasks.length} stages done
+                            Delivery {formatLong(p.delivery_date)} · {done}/{projectTasks.length} done
                           </span>
                         </span>
                         <ProjectBadges project={p} risk={risk} />
@@ -134,7 +134,7 @@ export function ClientDetail({ client, colorIndex, projects, tasks, stages }: { 
       </div>
 
       <ClientFormSheet open={editing} onClose={() => setEditing(false)} client={client} />
-      <NewProjectSheet open={creating} onClose={() => setCreating(false)} clientId={client.id} stages={stages} />
+      <NewProjectSheet open={creating} onClose={() => setCreating(false)} clientId={client.id} />
     </>
   );
 }

@@ -55,7 +55,7 @@ export function TimelineList({
 
   const keys = [...buckets.keys()].sort((a, b) => (a === "overdue" ? -1 : b === "overdue" ? 1 : diffDays(a, b)));
   const assigneeName = (t: Task) =>
-    [context.vendors.find((v) => v.id === t.vendor_id)?.name, context.designers.find((d) => d.id === t.designer_id)?.name].filter(Boolean).join(", ");
+    t.assigned_to_self ? "Me" : (context.vendors.find((v) => v.id === t.vendor_id)?.name ?? context.designers.find((d) => d.id === t.designer_id)?.name ?? "");
 
   return (
     <div className="space-y-5">
@@ -73,9 +73,13 @@ export function TimelineList({
               item.kind === "task" ? (
                 <li key={item.task.id} className="border-b border-line last:border-0">
                   <button type="button" onClick={() => onSelectTask(item.task)} className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-stone-50">
-                    <span className="h-9 w-1.5 shrink-0 rounded-full" style={{ background: item.color }} />
+                    {item.task.kind === "milestone" ? (
+                      <span className="size-4 shrink-0 rounded-full border-2 border-white shadow-soft" style={{ background: item.color }} aria-label="Milestone" />
+                    ) : (
+                      <span className="h-9 w-1.5 shrink-0 rounded-full" style={{ background: item.color }} />
+                    )}
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{item.task.stage_name}</span>
+                      <span className="block truncate text-sm font-medium">{item.task.title}</span>
                       <span className="block truncate text-xs text-muted">
                         {item.projectName} · {item.clientName}
                         {assigneeName(item.task) ? ` · ${assigneeName(item.task)}` : ""}

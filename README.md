@@ -1,25 +1,23 @@
 # Threadline
 
-A responsive planning app for a solo fashion consultant: clients, projects, an 8-stage production timeline, vendors and designers.
+A responsive planning app for a solo fashion consultant: clients, projects, tasks and milestones on a timeline, vendors and designers.
 
-- **Timeline**: Gantt chart (or list view on small screens), coloured by client or by status, with today marker, delivery milestones, at-risk flags, an overlap strip, week/month/quarter zoom, and drag-to-reschedule on laptop.
-- **Clients & projects**: create a project, choose its stages and the days each needs; they're scheduled backward from the delivery date.
+- **Timeline**: Gantt chart (or list view on small screens) of every project's tasks and milestones, coloured by client or by status, with today marker, delivery milestones, at-risk flags, an overlap strip, week/month/quarter zoom, an "Assigned to" filter (anyone, my tasks, unassigned, a partner) and drag-to-reschedule on laptop.
+- **Clients & projects**: a project is a name and delivery date; add tasks (title from a quick-pick list or typed, start and end date, assigned to me, a vendor, a designer or nobody) and single-date milestones whenever you plan them.
 - **Pricing** (per project, private): lines for fabric, designing, sampling, production, courier or your own item types, each with a quantity and unit, the vendor's agreed price (INR) and the price quoted to the client (any currency). Shows margin per line and in total, plus a consulting fee and total earnings. Foreign currencies use a rate locked per project (updatable, or typed by hand), with a two-way converter. Daily rates come free from ExchangeRate-API (no key), with a free backup source.
-- **Expenses**: record what each project costs, with a category (five built in, plus any you type), an optional stage and an optional vendor or designer as payee. Projects show totals by category; stages show what was spent on them; vendor and designer pages list payments across all projects.
+- **Expenses**: record what each project costs, with a category (five built in, plus any you type), an optional task and an optional vendor or designer as payee. Projects show totals by category; tasks show what was spent on them; vendor and designer pages list payments across all projects.
 - **Expenses overview**: spending across all projects, filtered by period, client, project, category and vendor/designer, with headline totals, spend per month, breakdowns by category, payee, project and client (tap a bar to filter), and a CSV download. Each project's expenses can be filtered by category and payee too.
 - **Vendors & designers**: searchable directory; each detail page lists their current assignments and payments across clients.
-- **Settings**: edit the stage list (names, order, reference days), expense categories, and pricing item types and products; change password; sign out.
+- **Settings**: edit the quick-pick task names, expense categories, and pricing item types and products; change password; sign out.
 
 Stack: Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · Supabase (Postgres + Auth + RLS) · Vercel.
 
-## Scheduling rules
+## Planning rules
 
-- When creating a project you pick which stages it needs and enter the days for each. Nothing is filled in from defaults.
-- The chosen stages run back to back in their Settings order. The last one ends on the delivery date; each earlier stage ends the day before the next starts. Durations are inclusive calendar days.
-- Stages can be added to a project later, or removed one at a time or several at once. Expenses linked to a removed stage stay on the project.
-- When a vendor or designer with a typical lead time is assigned, the task panel offers to use it (the longer of the two if both are set).
-- Changing a task's end date offers to move later unfinished tasks in that project by the same number of days.
-- A project is **at risk** when a task is past its end date and not done, when its schedule ends after the delivery date, or when the remaining work no longer fits before delivery.
+- Tasks are free-form: each has its own dates and moves on its own (no automatic shifting of other tasks).
+- A milestone is a single-date task, drawn as a round marker on the timeline.
+- Assigning a vendor or designer with a typical lead time offers to set the end date from it; it is never applied automatically.
+- A project is **at risk** when an unfinished task is past its end date, or an unfinished task or milestone ends after the delivery date.
 
 The rules live in `src/lib/scheduling` and are covered by `npm test`.
 

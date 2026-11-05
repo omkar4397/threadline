@@ -131,7 +131,7 @@ export function ExpensesSection({
               {visible.length === 0 ? <p className="px-4 py-6 text-center text-sm text-muted">No expenses match these filters.</p> : null}
               <ul>
                 {visible.map((e) => {
-                  const stage = tasks.find((t) => t.id === e.task_id)?.stage_name;
+                  const taskTitle = tasks.find((t) => t.id === e.task_id)?.title;
                   const paidTo = payeeKey(e) === "none" ? null : payeeLabel(payeeKey(e), vendors, designers);
                   return (
                     <li key={e.id} className="border-b border-line last:border-0">
@@ -144,7 +144,7 @@ export function ExpensesSection({
                           <span className="block truncate text-xs text-muted">
                             {formatLong(e.spent_on)}
                             {paidTo ? ` · ${paidTo}` : ""}
-                            {stage ? ` · ${stage}` : ""}
+                            {taskTitle ? ` · ${taskTitle}` : ""}
                           </span>
                         </span>
                         <span className="shrink-0 text-sm font-semibold tabular-nums">{formatMoney(Number(e.amount))}</span>

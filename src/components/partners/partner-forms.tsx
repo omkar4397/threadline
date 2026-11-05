@@ -44,7 +44,7 @@ function usePartnerSubmit(kind: "vendors" | "designers", existingId: string | un
 function LeadAndRating({ lead, rating }: { lead: number | null; rating: number | null }) {
   return (
     <>
-      <Field label="Typical lead time (days)" hint="Used instead of the stage default when assigned to a task.">
+      <Field label="Typical lead time (days)" hint="Suggested as the task length when this partner is assigned.">
         <Input name="typical_lead_days" type="number" inputMode="numeric" min={1} max={365} defaultValue={lead ?? ""} />
       </Field>
       <div>

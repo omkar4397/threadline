@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { deleteRow, insertRow, updateRow } from "@/lib/mutations";
 import { findCategoryByName, formatMoney, parseAmount } from "@/lib/expenses";
 import { formatRange, todayISO } from "@/lib/dates";
+import { compareTasks } from "@/lib/scheduling";
 import { errorMessage } from "@/lib/form";
 import { VENDOR_TYPE_LABEL } from "@/lib/labels";
 import type { Designer, Expense, ExpenseCategory, Task, Vendor } from "@/lib/types";
@@ -22,7 +23,7 @@ export type ExpenseSheetProps = {
   projectId: string;
   /** Edit this expense; otherwise a new one is added. */
   expense?: Expense;
-  /** Pre-select a stage when adding from a stage. */
+  /** Pre-select a task when adding from a task. */
   defaultTaskId?: string;
   tasks: Task[];
   categories: ExpenseCategory[];
@@ -46,7 +47,7 @@ function ExpenseForm({ onClose, projectId, expense, defaultTaskId, tasks, catego
   const router = useRouter();
   const confirm = useConfirm();
   const toast = useToast();
-  const sortedTasks = [...tasks].sort((a, b) => a.sort_order - b.sort_order);
+  const sortedTasks = [...tasks].sort(compareTasks);
   const initialTask = sortedTasks.find((t) => t.id === (expense?.task_id ?? defaultTaskId));
 
   const [amount, setAmount] = useState(expense ? String(expense.amount) : "");
@@ -63,9 +64,9 @@ function ExpenseForm({ onClose, projectId, expense, defaultTaskId, tasks, catego
 
   const parsedAmount = parseAmount(amount);
 
-  function chooseStage(id: string) {
+  function chooseTask(id: string) {
     setTaskId(id);
-    // Suggest the stage's vendor or designer as the payee when none is chosen yet.
+    // Suggest the task's vendor or designer as the payee when none is chosen yet.
     const task = sortedTasks.find((t) => t.id === id);
     if (!payee && task) setPayee(payeeValue(task.vendor_id, task.designer_id));
   }
@@ -153,12 +154,12 @@ function ExpenseForm({ onClose, projectId, expense, defaultTaskId, tasks, catego
         </Field>
       ) : null}
 
-      <Field label="Stage (optional)">
-        <Select value={taskId} onChange={(e) => chooseStage(e.target.value)}>
-          <option value="">Not linked to a stage</option>
-          {sortedTasks.map((t, i) => (
+      <Field label="Task (optional)">
+        <Select value={taskId} onChange={(e) => chooseTask(e.target.value)}>
+          <option value="">Not linked to a task</option>
+          {sortedTasks.map((t) => (
             <option key={t.id} value={t.id}>
-              {i + 1}. {t.stage_name} · {formatRange(t.start_date, t.end_date)}
+              {t.title} · {formatRange(t.start_date, t.end_date)}
             </option>
           ))}
         </Select>
