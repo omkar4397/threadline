@@ -217,7 +217,10 @@ export function PricingSection({
               const detail = detailName(l);
               // Vendor first, then the fabric or product; the item type sits below in small text.
               const name = [provider, detail].filter(Boolean).join(" · ") || typeName(l.item_type_id);
-              const per = l.unit === "flat" ? "" : ` / ${UNIT_LABEL[l.unit].one}`;
+              const lumpSum = l.unit !== "flat" && l.price_basis === "total";
+              const per = l.unit === "flat" ? "" : lumpSum ? " lump sum" : ` / ${UNIT_LABEL[l.unit].one}`;
+              // Lump sums and flat amounts are already totals, so the total line would repeat them.
+              const showTotal = l.unit !== "flat" && !lumpSum;
               return (
                 <li key={l.id} className="border-b border-line last:border-0">
                   <button
@@ -237,14 +240,14 @@ export function PricingSection({
                     <span className="hidden text-right text-sm tabular-nums md:block">
                       {formatCurrency(Number(l.vendor_rate), "INR")}
                       {per}
-                      {l.unit === "flat" ? null : <span className="block text-xs text-muted">{formatCurrency(f.vendorTotal, "INR")}</span>}
+                      {showTotal ? <span className="block text-xs text-muted">{formatCurrency(f.vendorTotal, "INR")}</span> : null}
                     </span>
                     <span className="hidden text-right text-sm tabular-nums md:block">
                       {formatCurrency(Number(l.client_rate), l.client_currency)}
                       {per}
-                      {l.unit !== "flat" || l.client_currency !== "INR" ? (
+                      {showTotal || l.client_currency !== "INR" ? (
                         <span className="block text-xs text-muted">
-                          {l.unit === "flat" ? "" : formatCurrency(f.clientTotal, l.client_currency)}
+                          {showTotal ? formatCurrency(f.clientTotal, l.client_currency) : ""}
                           {l.client_currency !== "INR" && f.clientInr !== null ? ` ≈ ${formatCurrency(f.clientInr, "INR")}` : ""}
                         </span>
                       ) : null}

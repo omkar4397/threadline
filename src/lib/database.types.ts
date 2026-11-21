@@ -9,6 +9,7 @@ type TaskKind = "task" | "milestone";
 type VendorType = "fabric_supplier" | "printer" | "manufacturer" | "shipper" | "other";
 type PricingUnit = "metre" | "piece" | "design" | "shipment" | "set" | "kg" | "flat";
 type PricingDetail = "none" | "text" | "product";
+type PricingBasis = "unit" | "total";
 
 type Table<Row, Required extends keyof Row> = {
   Row: Row;
@@ -111,6 +112,7 @@ export type Database = {
           vendor_rate: number;
           client_rate: number;
           client_currency: string;
+          price_basis: PricingBasis;
           vendor_id: string | null;
           designer_id: string | null;
         },
@@ -155,6 +157,7 @@ export type Database = {
       vendor_type: VendorType;
       pricing_unit: PricingUnit;
       pricing_detail: PricingDetail;
+      pricing_basis: PricingBasis;
     };
     CompositeTypes: { [_ in never]: never };
   };

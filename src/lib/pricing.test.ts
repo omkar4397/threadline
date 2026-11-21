@@ -66,6 +66,12 @@ describe("lineFigures", () => {
     expect(f.margin).toBe(4800);
   });
 
+  it("uses lump sums as totals while keeping the quantity", () => {
+    const f = lineFigures({ ...line(3, "design", 12000, 15000), price_basis: "total" }, {});
+    expect(f).toMatchObject({ vendorTotal: 12000, clientTotal: 15000, margin: 3000 });
+    expect(pricingSummary([{ ...line(3, "design", 12000, 15000), price_basis: "total" }], null, {}).vendorTotal).toBe(12000);
+  });
+
   it("treats flat amounts as a quantity of one", () => {
     expect(lineFigures(line(5, "flat", 800, 1500), {}).vendorTotal).toBe(800);
   });

@@ -3,6 +3,7 @@ import type { Enum } from "@/lib/database.types";
 
 export type PricingUnit = Enum<"pricing_unit">;
 export type PricingDetail = Enum<"pricing_detail">;
+export type PricingBasis = Enum<"pricing_basis">;
 
 export const PRICING_UNITS: PricingUnit[] = ["metre", "piece", "design", "shipment", "set", "kg", "flat"];
 
@@ -32,7 +33,15 @@ export function formatQuantity(quantity: number, unit: PricingUnit) {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-type LineLike = { quantity: number; unit: PricingUnit; vendor_rate: number; client_rate: number; client_currency: string };
+type LineLike = {
+  quantity: number;
+  unit: PricingUnit;
+  vendor_rate: number;
+  client_rate: number;
+  client_currency: string;
+  /** "total": the rates are lump sums for the whole quantity. Defaults to per unit. */
+  price_basis?: PricingBasis;
+};
 
 export type LineFigures = {
   /** INR */
@@ -48,7 +57,8 @@ export type LineFigures = {
 };
 
 export function lineFigures(line: LineLike, rates: RateMap | null | undefined): LineFigures {
-  const qty = line.unit === "flat" ? 1 : Number(line.quantity);
+  // Flat amounts and lump sums are totals already; otherwise rate × quantity.
+  const qty = line.unit === "flat" || line.price_basis === "total" ? 1 : Number(line.quantity);
   const vendorTotal = round2(qty * Number(line.vendor_rate));
   const clientTotal = round2(qty * Number(line.client_rate));
   const rate = inrPerUnit(line.client_currency, rates);

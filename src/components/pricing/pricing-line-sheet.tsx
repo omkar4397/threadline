@@ -63,6 +63,7 @@ function LineForm({ onClose, projectId, line, defaultCurrency, itemTypes, produc
   const [vendorRate, setVendorRate] = useState(line ? String(Number(line.vendor_rate)) : "");
   const [clientRate, setClientRate] = useState(line ? String(Number(line.client_rate)) : "");
   const [currency, setCurrency] = useState(line?.client_currency ?? defaultCurrency);
+  const [basis, setBasis] = useState<"unit" | "total">(line?.price_basis ?? "unit");
   const [manualRate, setManualRate] = useState("");
   const [provider, setProvider] = useState(line?.vendor_id ? `v:${line.vendor_id}` : line?.designer_id ? `d:${line.designer_id}` : "");
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +72,8 @@ function LineForm({ onClose, projectId, line, defaultCurrency, itemTypes, produc
   const type = itemTypes.find((t) => t.id === typeId);
   const detailKind: PricingDetail = typeId === NEW ? newType.detail : (type?.detail ?? "none");
   const isFlat = unit === "flat";
+  // Lump sum: the prices are totals for the whole quantity (e.g. 3 designs for one amount).
+  const lumpSum = !isFlat && basis === "total";
 
   function chooseType(id: string) {
     setTypeId(id);
@@ -91,8 +94,10 @@ function LineForm({ onClose, projectId, line, defaultCurrency, itemTypes, produc
   const cRate = num(clientRate || "0");
   const rates: RateMap = { ...(latest ?? {}), ...locked, ...(parseRate(manualRate) ? { [currency]: parseRate(manualRate)! } : {}) };
   const valid = qty > 0 && vRate >= 0 && cRate >= 0;
-  const preview = valid ? lineFigures({ quantity: qty, unit, vendor_rate: vRate, client_rate: cRate, client_currency: currency }, rates) : null;
-  const unitWord = isFlat ? "" : ` ${UNIT_LABEL[unit].per}`;
+  const preview = valid
+    ? lineFigures({ quantity: qty, unit, vendor_rate: vRate, client_rate: cRate, client_currency: currency, price_basis: lumpSum ? "total" : "unit" }, rates)
+    : null;
+  const unitWord = isFlat ? "" : lumpSum ? `, lump sum for all ${UNIT_LABEL[unit].many}` : ` ${UNIT_LABEL[unit].per}`;
 
   async function resolveType() {
     if (typeId !== NEW) return typeId;
@@ -130,6 +135,7 @@ function LineForm({ onClose, projectId, line, defaultCurrency, itemTypes, produc
         detail: detailKind === "text" ? detail.trim() || null : null,
         quantity: qty,
         unit,
+        price_basis: lumpSum ? ("total" as const) : ("unit" as const),
         vendor_rate: vRate,
         client_rate: cRate,
         client_currency: currency,
@@ -275,6 +281,26 @@ function LineForm({ onClose, projectId, line, defaultCurrency, itemTypes, produc
           </Field>
         )}
       </div>
+
+      {isFlat ? null : (
+        <fieldset>
+          <legend className="mb-1.5 text-sm font-medium">Pricing</legend>
+          <div className="grid grid-cols-2 gap-1 rounded-full bg-accent-soft/70 p-1">
+            {(["unit", "total"] as const).map((b) => (
+              <button
+                key={b}
+                type="button"
+                aria-pressed={basis === b}
+                onClick={() => setBasis(b)}
+                className={`min-h-10 rounded-full px-2 text-sm ${basis === b ? "bg-surface font-semibold shadow-soft" : "text-stone-500"}`}
+              >
+                {b === "unit" ? `Price ${UNIT_LABEL[unit].per}` : "Lump sum"}
+              </button>
+            ))}
+          </div>
+          {lumpSum ? <p className="mt-1 text-xs text-muted">Enter one total for the client and one for the vendor or designer, covering all {UNIT_LABEL[unit].many}.</p> : null}
+        </fieldset>
+      )}
 
       <Field label={`Vendor price${unitWord} (₹)`} hint="What the vendor, designer or shipper agreed with you.">
         <Input inputMode="decimal" value={vendorRate} onChange={(e) => setVendorRate(e.target.value)} placeholder="0" required />
