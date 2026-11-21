@@ -54,12 +54,27 @@ export function PricingSection({
   const needed = foreignCurrencies(lines, fee);
   const today = latestRates ? pricingSummary(lines, fee, { ...locked, ...pickRates(latestRates, needed) }) : null;
   const todayDiff = today && needed.length > 0 && today.missingRates.length === 0 ? Math.round((today.earned - summary.earned) * 100) / 100 : null;
-  const sorted = [...lines].sort((a, b) => a.created_at.localeCompare(b.created_at));
-  const defaultCurrency = sorted.at(-1)?.client_currency ?? (fee.amount ? fee.currency : "INR");
+  const newest = [...lines].sort((a, b) => a.created_at.localeCompare(b.created_at)).at(-1);
+  const defaultCurrency = newest?.client_currency ?? (fee.amount ? fee.currency : "INR");
 
   const typeName = (id: string) => itemTypes.find((t) => t.id === id)?.name ?? "Item";
   const productName = (id: string | null) => (id ? products.find((p) => p.id === id)?.name : undefined);
   const providerName = (l: PricingLine) => vendors.find((v) => v.id === l.vendor_id)?.name ?? designers.find((d) => d.id === l.designer_id)?.name;
+  const detailName = (l: PricingLine) => productName(l.product_id) ?? l.detail ?? undefined;
+
+  // Grouped by vendor or designer name (lines without one last), then by fabric
+  // or product name, then by when they were added.
+  const sorted = [...lines].sort((a, b) => {
+    const pa = providerName(a);
+    const pb = providerName(b);
+    if (pa && !pb) return -1;
+    if (!pa && pb) return 1;
+    return (
+      (pa ?? "").localeCompare(pb ?? "", undefined, { sensitivity: "base" }) ||
+      (detailName(a) ?? "").localeCompare(detailName(b) ?? "", undefined, { sensitivity: "base" }) ||
+      a.created_at.localeCompare(b.created_at)
+    );
+  });
 
   async function updateAllRates() {
     if (!latestRates) return;
@@ -198,9 +213,11 @@ export function PricingSection({
           <ul>
             {sorted.map((l) => {
               const f = lineFigures(l, locked);
-              const name = [typeName(l.item_type_id), productName(l.product_id) ?? l.detail].filter(Boolean).join(" · ");
-              const per = l.unit === "flat" ? "" : ` / ${UNIT_LABEL[l.unit].one}`;
               const provider = providerName(l);
+              const detail = detailName(l);
+              // Vendor first, then the fabric or product; the item type sits below in small text.
+              const name = [provider, detail].filter(Boolean).join(" · ") || typeName(l.item_type_id);
+              const per = l.unit === "flat" ? "" : ` / ${UNIT_LABEL[l.unit].one}`;
               return (
                 <li key={l.id} className="border-b border-line last:border-0">
                   <button
@@ -210,7 +227,10 @@ export function PricingSection({
                   >
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-medium">{name}</span>
-                      {provider ? <span className="block truncate text-xs text-muted">{provider}</span> : null}
+                      <span className="block truncate text-xs text-muted">
+                        {typeName(l.item_type_id)}
+                        {provider ? "" : " · no vendor set"}
+                      </span>
                       <span className="block text-xs text-muted md:hidden">{formatQuantity(Number(l.quantity), l.unit)}</span>
                     </span>
                     <span className="hidden text-sm md:block">{formatQuantity(Number(l.quantity), l.unit)}</span>
